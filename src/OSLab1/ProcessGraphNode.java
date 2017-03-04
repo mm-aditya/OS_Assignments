@@ -89,6 +89,25 @@ public class ProcessGraphNode {
         return nodeId;
     }
 
+    public String toString(){
+        String op = "~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
+        String inpFile = "none";
+        String opFile = "none";
+        if (inputFile!=null)
+            inpFile = inputFile.getName();
+        if (outputFile!=null)
+            inpFile = outputFile.getName();
+        op = op + "Node ID: "+nodeId+"\n";
+        op = op + String.format("Program name and arguments: %s\nInput File: %s\nOutput File: %s\n",command, inpFile, opFile);
+        op = op + "\nParent nodes: \n";
+        for(ProcessGraphNode node: parents)
+            op = op + node.getNodeId() + "\n";
+        op = op + "\nChild nodes: \n";
+        for(ProcessGraphNode node: children)
+            op = op + node.getNodeId() + "\n";
+        return op;
+    }
+
     public synchronized boolean allParentsExecuted(){
         boolean ans=true;
         for (ProcessGraphNode child : this.getChildren()) {

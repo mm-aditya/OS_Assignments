@@ -1,3 +1,3 @@
 # OS_Assignments
 
-**OS LAB 1** - Incomplete
+**OS LAB 1** - *Incomplete*

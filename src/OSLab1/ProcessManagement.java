@@ -3,6 +3,7 @@ package OSLab1;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 public class ProcessManagement {
 
@@ -65,6 +66,10 @@ public class ProcessManagement {
             //Wait for the processes
             for(int i = 0; i < processes.size();i++){
                 processes.get(i).waitFor();
+                if (processes.get(i).exitValue() != 0) {
+                    Scanner in = new Scanner(processes.get(i).getErrorStream());
+                    while (in.hasNext()) System.out.print(in.next());
+                }
             }
 
             //For processes that finished execution, set the appropriate parameters

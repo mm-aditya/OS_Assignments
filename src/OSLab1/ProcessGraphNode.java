@@ -99,12 +99,13 @@ public class ProcessGraphNode {
             inpFile = outputFile.getName();
         op = op + "Node ID: "+nodeId+"\n";
         op = op + String.format("Program name and arguments: %s\nInput File: %s\nOutput File: %s\n",command, inpFile, opFile);
-        op = op + "\nParent nodes: \n";
-        for(ProcessGraphNode node: parents)
-            op = op + node.getNodeId() + "\n";
-        op = op + "\nChild nodes: \n";
-        for(ProcessGraphNode node: children)
-            op = op + node.getNodeId() + "\n";
+        op = op + "Is runnable: " + isRunnable() + "\nIs executed: "+isExecuted()+"\n";
+//        op = op + "\nParent nodes: \n";
+//        for(ProcessGraphNode node: parents)
+//            op = op + node.getNodeId() + "\n";
+//        op = op + "\nChild nodes: \n";
+//        for(ProcessGraphNode node: children)
+//            op = op + node.getNodeId() + "\n";
         return op;
     }
 

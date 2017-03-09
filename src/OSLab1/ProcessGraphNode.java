@@ -53,6 +53,7 @@ public class ProcessGraphNode {
             parents.add(parent);
         }
     }
+
     public void setInputFile(File inputFile) {
         this.inputFile = inputFile;
     }
@@ -89,6 +90,8 @@ public class ProcessGraphNode {
         return nodeId;
     }
 
+
+    //Custom print function to check all the info regarding single node
     public String toString(){
         String op = "~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
         String inpFile = "none";
@@ -100,12 +103,12 @@ public class ProcessGraphNode {
         op = op + "Node ID: "+nodeId+"\n";
         op = op + String.format("Program name and arguments: %s\nInput File: %s\nOutput File: %s\n",command, inpFile, opFile);
         op = op + "Is runnable: " + isRunnable() + "\nIs executed: "+isExecuted()+"\n";
-//        op = op + "\nParent nodes: \n";
-//        for(ProcessGraphNode node: parents)
-//            op = op + node.getNodeId() + "\n";
-//        op = op + "\nChild nodes: \n";
-//        for(ProcessGraphNode node: children)
-//            op = op + node.getNodeId() + "\n";
+        op = op + "\nParent nodes: \n";
+        for(ProcessGraphNode node: parents)
+            op = op + node.getNodeId() + "\n";
+        op = op + "\nChild nodes: \n";
+        for(ProcessGraphNode node: children)
+            op = op + node.getNodeId() + "\n";
         return op;
     }
 
@@ -122,5 +125,5 @@ public class ProcessGraphNode {
         }
 
         return ans;
-    }
+    }  //Didn't use this. Sorry.
 }

@@ -6,10 +6,8 @@ import java.util.ArrayList;
 
 public class ProcessManagement {
 
-    //set the working directory
-    private static File currentDirectory = new File(System.getProperty("user.dir"));
-    //set the instructions file
-    private static File instructionSet = new File("graph-file");
+    private static File currentDirectory = new File(System.getProperty("user.dir"));  //set the working directory
+    private static File instructionSet = new File("graph-file");            //set the instructions file
     public static Object lock=new Object();
 
     public static void main(String[] args) throws InterruptedException, IOException{
@@ -17,8 +15,6 @@ public class ProcessManagement {
         //parse the instruction file and construct a data structure, stored inside ProcessGraph class
         ParseFile.generateGraph(new File(currentDirectory + "/src/OSLab1/"+instructionSet));
 
-        // Print the graph information
-	    // WRITE YOUR CODE
         //mark initial runnable
         for(int i =0; i < ProcessGraph.nodes.size(); i++) {
             if (ProcessGraph.nodes.get(i).getParents().isEmpty()) {
@@ -26,28 +22,26 @@ public class ProcessManagement {
             }
         }
 
+        //print initial state of graph
         ProcessGraph.printGraph();
-        //System.out.println(ProcessGraph.nodes.get(0).getParents().isEmpty());
 
-
-
+        //check to see if all processes have been executed
         boolean allNotExec = true;
 
+        //MAIN WHILE LOOP
         while(allNotExec) {
             allNotExec = false;
-            ArrayList<ProcessBuilder> pbs = new ArrayList<>();
-            ArrayList<Process> processes = new ArrayList<>();
-            ArrayList<Integer> indices = new ArrayList<>();
-            // Using index of ProcessGraph, loop through each ProcessGraphNode, to check whether it is ready to run
-            // check if all the nodes are executed
-            // WRITE YOUR CODE
+            ArrayList<ProcessBuilder> pbs = new ArrayList<>();  //Processbuilder array list
+            ArrayList<Process> processes = new ArrayList<>();   //Process array list
+            ArrayList<Integer> indices = new ArrayList<>();     //Indices to store nodeIDs that will be run in current iteration
+
+            //Check if all nodes have been executed
             for(ProcessGraphNode node: ProcessGraph.nodes){
                 if(!node.isExecuted() && !node.isRunnable())
                     allNotExec = true;
             }
 
-            //mark all the runnable nodes
-            // WRITE YOUR CODE
+            //Set up processes that can be run, and run them
             for(int i =0; i < ProcessGraph.nodes.size();i++){
                 if(ProcessGraph.nodes.get(i).isRunnable()){
                     indices.add(i);
@@ -62,24 +56,26 @@ public class ProcessManagement {
                 }
             }
 
-            //run the node if it is runnable
-            // WRITE YOUR CODE
+           //Run the processes one by one
             for(int i =0; i < pbs.size();i++){
                 System.out.println("Running process: " + indices.get(i));
-                //System.out.println("Inp and op are " + ProcessGraph.nodes.get(i).getInputFile().getName() + ProcessGraph.nodes.get(i).getOutputFile().getName());
                 processes.add(pbs.get(i).start());
             }
 
-            //System.out.println("Waiting for processes now");
+            //Wait for the processes
             for(int i = 0; i < processes.size();i++){
                 processes.get(i).waitFor();
             }
+
+            //For processes that finished execution, set the appropriate parameters
             for(Integer i: indices) {
                 ProcessGraph.nodes.get(i).setExecuted();
                 ProcessGraph.nodes.get(i).setNotRunable();
 
             }
 
+
+            //Only if all processes haven't been executed, set nodes that can now be run to runnable
             if(allNotExec) {
                 for (Integer i : indices) {
                     for (int p = 0; p < ProcessGraph.nodes.get(i).getChildren().size(); p++) {
@@ -90,12 +86,14 @@ public class ProcessManagement {
                         }
                         if (parents) {
                             ProcessGraph.nodes.get(i).getChildren().get(p).setRunnable();
-                            //System.out.println(ProcessGraph.nodes.get(i).getChildren().get(p));
                         }
 
                     }
                 }
             }
+
+
+
         }
 
         System.out.println("\nAll process finished successfully");

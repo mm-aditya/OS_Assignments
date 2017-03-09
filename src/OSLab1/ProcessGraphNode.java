@@ -5,11 +5,11 @@ import java.util.ArrayList;
 
 public class ProcessGraphNode {
 
-    //point to all the parents
-    private ArrayList<ProcessGraphNode> parents=new ArrayList<>();
-    //point to all the children
-    private ArrayList<ProcessGraphNode> children=new ArrayList<>();
-    //properties of ProcessGraphNode
+    // Point to all the parents
+    private ArrayList<ProcessGraphNode> parents = new ArrayList<>();
+    // Point to all the children
+    private ArrayList<ProcessGraphNode> children = new ArrayList<>();
+    // Properties of ProcessGraphNode
     private int nodeId;
     private File inputFile;
     private File outputFile;
@@ -18,17 +18,19 @@ public class ProcessGraphNode {
     private boolean executed;
 
 
-    public ProcessGraphNode(int nodeId ) {
+    public ProcessGraphNode(int nodeId) {
         this.nodeId = nodeId;
-        this.runnable=false;
-        this.executed=false;
+        this.runnable = false;
+        this.executed = false;
     }
 
     public void setRunnable() {
         this.runnable = true;
     }
 
-    public void setNotRunable() {this.runnable = false;}
+    public void setNotRunable() {
+        this.runnable = false;
+    }
 
     public void setExecuted() {
         this.executed = true;
@@ -42,14 +44,14 @@ public class ProcessGraphNode {
         return executed;
     }
 
-    public void addChild(ProcessGraphNode child){
-        if (!children.contains(child)){
+    public void addChild(ProcessGraphNode child) {
+        if (!children.contains(child)) {
             children.add(child);
         }
     }
 
-    public void addParent(ProcessGraphNode parent){
-        if (!parents.contains(parent)){
+    public void addParent(ProcessGraphNode parent) {
+        if (!parents.contains(parent)) {
             parents.add(parent);
         }
     }
@@ -92,36 +94,34 @@ public class ProcessGraphNode {
 
 
     //Custom print function to check all the info regarding single node
-    public String toString(){
+    public String toString() {
         String op = "~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
         String inpFile = "none";
         String opFile = "none";
-        if (inputFile!=null)
-            inpFile = inputFile.getName();
-        if (outputFile!=null)
-            inpFile = outputFile.getName();
-        op = op + "Node ID: "+nodeId+"\n";
-        op = op + String.format("Program name and arguments: %s\nInput File: %s\nOutput File: %s\n",command, inpFile, opFile);
-        op = op + "Is runnable: " + isRunnable() + "\nIs executed: "+isExecuted()+"\n";
-        op = op + "\nParent nodes: \n";
-        for(ProcessGraphNode node: parents)
-            op = op + node.getNodeId() + "\n";
-        op = op + "\nChild nodes: \n";
-        for(ProcessGraphNode node: children)
-            op = op + node.getNodeId() + "\n";
+        if (inputFile != null) inpFile = inputFile.getName();
+        if (outputFile != null) inpFile = outputFile.getName();
+        op += "Node ID: " + nodeId + "\n";
+        op += String.format("Program name and arguments: %s\nInput File: %s\nOutput File: %s\n", command, inpFile, opFile);
+        op += "Is runnable: " + isRunnable() + "\nIs executed: " + isExecuted() + "\n";
+        op += "\nParent nodes: \n";
+        for (ProcessGraphNode node : parents)
+            op += node.getNodeId() + "\n";
+        op += "\nChild nodes: \n";
+        for (ProcessGraphNode node : children)
+            op += node.getNodeId() + "\n";
         return op;
     }
 
-    public synchronized boolean allParentsExecuted(){
-        boolean ans=true;
+    public synchronized boolean allParentsExecuted() {
+        boolean ans = true;
         for (ProcessGraphNode child : this.getChildren()) {
             if (child.isExecuted()) {
                 return false;
             }
         }
-        for (ProcessGraphNode parent:this.getParents()) {
+        for (ProcessGraphNode parent : this.getParents()) {
             if (!parent.isExecuted())
-                ans=false;
+                ans = false;
         }
 
         return ans;

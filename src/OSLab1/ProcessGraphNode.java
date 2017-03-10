@@ -112,6 +112,17 @@ public class ProcessGraphNode {
         return op;
     }
 
+    public synchronized String getNodeData() {
+        String result = "";
+        result += Integer.toString(getNodeId()) + ":";
+        result += getInputFile().getName() + ":";
+        result += getOutputFile().getName() + ":";
+        result += getCommand() + ":";
+        result += isRunnable() + ":";
+        result += isExecuted() + ":";
+        return result;
+    }
+
     public synchronized boolean allParentsExecuted() {
         boolean ans = true;
         for (ProcessGraphNode child : this.getChildren()) {

@@ -15,6 +15,7 @@ processes by traversing the graph. Independent processes take first priority and
 The processes are executed using Java's ProcessBuilder.  
   
 **Compilation**  
+Since this code contains a visualizer you're going to have to include these JAR files in your depencies: <https://nchc.dl.sourceforge.net/project/jung/jung/jung-2.0.1/jung2-2_0_1.zip>  
 Code is compiled in the `\out\production\OS Assignments\OSLab1` directory. Program can be run as a java program with
 input file as first command.  
 Output files will be saved in `\src\OSLab1`.
@@ -25,7 +26,7 @@ comments.
 
 *ParseFile.java* - Parses the input file into a DAG. The node structure of the DAG is defined in another class.  
 *ProcessGraphNode.java* - Node structure is defined in this class.  
-*ProcessGraph.java* - Contains a static ArrayList which houses the DAG to be traversed.  
+*ProcessGraph.java* - Contains a static ArrayList which houses the DAG to be traversed. Also contains the visualizer class that generates a new window in which you can view the current states of the nodes.  
 *ProcessManagement.java* - Traverses the graph. 
 
 

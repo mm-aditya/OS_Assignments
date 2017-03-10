@@ -9,6 +9,7 @@ import edu.uci.ics.jung.graph.util.EdgeType;
 import edu.uci.ics.jung.visualization.BasicVisualizationServer;
 import edu.uci.ics.jung.visualization.decorators.ToStringLabeller;
 import edu.uci.ics.jung.visualization.renderers.Renderer;
+import org.apache.commons.collections15.Transformer;
 
 import java.util.ArrayList;
 import javax.swing.JComponent;
@@ -75,67 +76,98 @@ public class ProcessGraph {
     static class Monitoring extends JFrame implements Runnable {
 
         static int edgeCount = 0;
-        static ArrayList<Integer[]> nodeCenters;
-
+        ArrayList<MyNode> nds;
+        Graph<Integer, String> g;
+        Layout<Integer, String> layout;
+        BasicVisualizationServer<Integer, String> vv;
+        JFrame frame;
 
         @Override
         public void run() {
+            nds = new ArrayList<>();
+            g = new DirectedSparseMultigraph<Integer, String>();
+            for(int i =0; i < nodes.size();i++){
+                nds.add(new MyNode(nodes.get(i).getNodeId()));
+            }
+            int edgectr = 0;
+
+            for(ProcessGraphNode node: nodes){
+                int indexFrom=-1;
+                int indexto=-1;
+                for(int i = 0;i < nds.size();i++){
+                    if(nds.get(i).id == node.getNodeId())
+                        indexFrom = i;
+                }
+                for(int i = 0; i < node.getChildren().size(); i ++){
+                    for(int k = 0;k < nds.size();k++){
+                        if(nds.get(k).id == node.getChildren().get(i).getNodeId())
+                            indexto = k;
+                    }
+                    g.addEdge( new String("edge "+ edgectr++),nds.get(indexFrom).id,nds.get(indexto).id,EdgeType.DIRECTED);
+                }
+            }
+
+            // The Layout<V, E> is parameterized by the vertex and edge types
+            layout = new CircleLayout(g);
+            //Layout<MyNode,MyLink> layout = new DAGLayout<MyNode,MyLink>(g);
+            layout.setSize(new Dimension(300,300)); // sets the initial size of the space
+
+            // The BasicVisualizationServer<V,E> is parameterized by the edge types
+            vv = new BasicVisualizationServer<Integer, String>(layout);
+            vv.setPreferredSize(new Dimension(500,500)); //Sets the viewing area size
+
+            vv.getRenderContext().setVertexLabelTransformer(new ToStringLabeller());
+            //vv.getRenderContext().setEdgeLabelTransformer(new ToStringLabeller());
+            vv.getRenderer().getVertexLabelRenderer().setPosition(Renderer.VertexLabel.Position.CNTR);
+
+
+
+            frame = new JFrame("Monitoring Tool");
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.getContentPane().add(vv);
+            frame.pack();
+            frame.setVisible(true);
+
             runGUI();
         }
          private void runGUI(){
 
             while(true){
-                int numofEdges=0;
-                ArrayList<Sample.MyNode> nds = new ArrayList<>();
-                Graph<Sample.MyNode, Sample.MyLink> g = new DirectedSparseMultigraph<Sample.MyNode, Sample.MyLink>();
-                Sample.MyLink stdlink = new Sample.MyLink(1.0,1.0);
-                for(int i =0; i < nodes.size();i++){
-                    nds.add(new Sample.MyNode(nodes.get(i).getNodeId()));
-                }
 
-                for(ProcessGraphNode node: nodes){
-                    int indexFrom=-1;
-                    int indexto=-1;
-                    for(int i = 0;i < nds.size();i++){
-                        if(nds.get(i).id == node.getNodeId())
-                            indexFrom = i;
+                Transformer<Integer,Paint> vertexColor = new Transformer<Integer,Paint>(){
+                    public Paint transform(Integer i) {
+                        if(nodeState(i)==0)
+                            return Color.RED;
+                        else if(nodeState(i)==1)
+                            return Color.YELLOW;
+                        else if(nodeState(i) ==2)
+                            return Color.GREEN;
+                        return Color.RED;
                     }
-                    for(int i = 0; i < node.getChildren().size(); i ++){
-                        for(int k = 0;k < nds.size();k++){
-                            if(nds.get(k).id == node.getChildren().get(i).getNodeId())
-                                indexto = k;
-                        }
 
-                       g.addEdge(stdlink, nds.get(indexFrom),nds.get(indexto),EdgeType.DIRECTED);
-                    }
-                }
+                };
 
-                // The Layout<V, E> is parameterized by the vertex and edge types
-                Layout<Integer, String> layout = new CircleLayout(g);
-                //Layout<MyNode,MyLink> layout = new DAGLayout<MyNode,MyLink>(g);
-                layout.setSize(new Dimension(300,300)); // sets the initial size of the space
-
-                // The BasicVisualizationServer<V,E> is parameterized by the edge types
-                BasicVisualizationServer<Integer, String> vv = new BasicVisualizationServer<Integer, String>(layout);
-                vv.setPreferredSize(new Dimension(500,500)); //Sets the viewing area size
-
-                vv.getRenderContext().setVertexLabelTransformer(new ToStringLabeller());
-                //vv.getRenderContext().setEdgeLabelTransformer(new ToStringLabeller());
-                vv.getRenderer().getVertexLabelRenderer().setPosition(Renderer.VertexLabel.Position.CNTR);
-
-
-
-                JFrame frame = new JFrame("Monitoring Tool");
-                frame.setLayout(new GridBagLayout());
-                frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                frame.getContentPane().add(vv, new GridBagConstraints());
-                frame.pack();
-                frame.setVisible(true);
-
+                vv.getRenderContext().setVertexFillPaintTransformer(vertexColor);
+                frame.validate();
+                frame.repaint();
             }
 
 
          }
+
+        private int nodeState(int ip){
+             int index = -1;
+             for(int i =0; i < nds.size();i++)
+                 if(nds.get(i).id == ip)
+                     index = i;
+             if(nodes.get(index).isRunnable() == false && nodes.get(index).isExecuted() == false)
+                 return 0;
+             else if (nodes.get(index).isRunnable()==true)
+                 return 1;
+             else if (nodes.get(index).isExecuted()==true)
+                 return 2;
+             return 1;
+        }
 
         static class MyNode {
             int id; // good coding practice would have this as private

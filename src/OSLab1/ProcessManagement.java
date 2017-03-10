@@ -7,7 +7,7 @@ import java.util.Scanner;
 
 public class ProcessManagement {
     private static File currentDirectory = new File(System.getProperty("user.dir"));  // Set the working directory
-    private static File instructionSet = new File("graph-file");            // Set the instructions file
+    private static File instructionSet = new File("graph-file2");            // Set the instructions file
 
     public static void main(String[] args) throws InterruptedException, IOException {
 

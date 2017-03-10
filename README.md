@@ -21,7 +21,7 @@ Since this code contains a visualizer you're going to have to include these JAR 
 As we are using the IntelliJ IDE for Java, our directory must be set to `/src/OSLab1`. You can change this in your code to whichever directory you wish to use.  
  
 Program can be run as a java program with
-input file as first command.  Output files will be saved in `\src\OSLab1`, which you can ofcourse change in the program files.  
+input file as first command.  Output files will be saved in `/OS_Assignments`, which you can ofcourse change in the program files.  
   
 Once the program runs you will notice a Java applet window pop up with the DAG on it. Once all the nodes have turned green it means that the program
 has finished traversing the graph. Simply close this window to complete the program execution.

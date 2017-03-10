@@ -1,5 +1,7 @@
 package OSLab1;
 
+import OSLab1.ProcessGraph.Monitoring;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -28,6 +30,9 @@ public class ProcessManagement {
         ArrayList<ProcessBuilder> pbs = new ArrayList<>();  // Processbuilder array list
         ArrayList<Process> processes = new ArrayList<>();   // Process array list
         ArrayList<Integer> indices = new ArrayList<>();     // Indices to store nodeIDs that will be run in current iteration
+
+        Thread monitor = new Thread(new Monitoring());  //
+        monitor.start();
 
         // MAIN WHILE LOOP
         // Check to see if all processes have been executed

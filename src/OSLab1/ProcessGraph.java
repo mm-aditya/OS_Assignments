@@ -4,7 +4,6 @@ import edu.uci.ics.jung.algorithms.layout.CircleLayout;
 import edu.uci.ics.jung.algorithms.layout.Layout;
 import edu.uci.ics.jung.graph.DirectedSparseMultigraph;
 import edu.uci.ics.jung.graph.Graph;
-import edu.uci.ics.jung.graph.SparseMultigraph;
 import edu.uci.ics.jung.graph.util.EdgeType;
 import edu.uci.ics.jung.visualization.BasicVisualizationServer;
 import edu.uci.ics.jung.visualization.decorators.ToStringLabeller;
@@ -12,10 +11,8 @@ import edu.uci.ics.jung.visualization.renderers.Renderer;
 import org.apache.commons.collections15.Transformer;
 
 import java.util.ArrayList;
-import javax.swing.JComponent;
 import javax.swing.JFrame;
 import java.awt.*;
-import java.awt.geom.*;
 
 
 public class ProcessGraph {
@@ -70,8 +67,6 @@ public class ProcessGraph {
         }
     }
 
-
-
     // For monitoring
     static class Monitoring extends JFrame implements Runnable {
 
@@ -85,12 +80,15 @@ public class ProcessGraph {
         @Override
         public void run() {
             nds = new ArrayList<>();
+            int edgectr = 0;
             g = new DirectedSparseMultigraph<Integer, String>();
+
+            //Making a custom class for storing node info for the graph
             for(int i =0; i < nodes.size();i++){
                 nds.add(new MyNode(nodes.get(i).getNodeId()));
             }
-            int edgectr = 0;
 
+            //Loop to generate the graph by adding edges and vertices
             for(ProcessGraphNode node: nodes){
                 int indexFrom=-1;
                 int indexto=-1;
@@ -111,17 +109,14 @@ public class ProcessGraph {
             layout = new CircleLayout(g);
             //Layout<MyNode,MyLink> layout = new DAGLayout<MyNode,MyLink>(g);
             layout.setSize(new Dimension(300,300)); // sets the initial size of the space
-
             // The BasicVisualizationServer<V,E> is parameterized by the edge types
             vv = new BasicVisualizationServer<Integer, String>(layout);
             vv.setPreferredSize(new Dimension(500,500)); //Sets the viewing area size
-
             vv.getRenderContext().setVertexLabelTransformer(new ToStringLabeller());
             //vv.getRenderContext().setEdgeLabelTransformer(new ToStringLabeller());
             vv.getRenderer().getVertexLabelRenderer().setPosition(Renderer.VertexLabel.Position.CNTR);
 
-
-
+            //Drawing the graph for the first time
             frame = new JFrame("Monitoring Tool");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             frame.getContentPane().add(vv);
@@ -134,20 +129,21 @@ public class ProcessGraph {
 
             while(true){
 
+                //This loops infinitely, updating the graph colors as the program progresses
                 Transformer<Integer,Paint> vertexColor = new Transformer<Integer,Paint>(){
                     public Paint transform(Integer i) {
                         if(nodeState(i)==0)
-                            return Color.RED;
+                            return Color.RED;       // RED for processes not ready to execute
                         else if(nodeState(i)==1)
-                            return Color.YELLOW;
+                            return Color.YELLOW;    // YELLOW for processes ready to be executed
                         else if(nodeState(i) ==2)
-                            return Color.GREEN;
+                            return Color.GREEN;     // GREEN for processes that finish executing
                         return Color.RED;
                     }
 
                 };
 
-                vv.getRenderContext().setVertexFillPaintTransformer(vertexColor);
+                vv.getRenderContext().setVertexFillPaintTransformer(vertexColor); // To paint the colors
                 frame.validate();
                 frame.repaint();
             }
@@ -155,6 +151,7 @@ public class ProcessGraph {
 
          }
 
+        // Method that returns an integer value representing the state of the node
         private int nodeState(int ip){
              int index = -1;
              for(int i =0; i < nds.size();i++)
@@ -179,24 +176,7 @@ public class ProcessGraph {
             }
         }
 
-        static class MyLink {
-            double capacity; // should be private
-            double weight; // should be private for good practice
-            int id;
-
-            public MyLink(double weight, double capacity) {
-                this.id = edgeCount++; // This is defined in the outer class.
-                this.weight = weight;
-                this.capacity = capacity;
-            }
-            public String toString() { // Always good for debugging
-                return "E"+id;
-            }
-
-        }
-
     }
-
 
     // Class that starts IPC for monitoring interface
 //    class IPCServer extends Thread {

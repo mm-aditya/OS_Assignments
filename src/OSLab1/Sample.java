@@ -15,9 +15,6 @@ import edu.uci.ics.jung.visualization.renderers.Renderer;
 import javax.swing.*;
 import java.awt.*;
 
-/**
- * Created by aditya on 10/3/2017.
- */
 public class Sample {
 
     public static int edgeCount = 0;

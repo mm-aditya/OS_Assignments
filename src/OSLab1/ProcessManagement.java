@@ -14,7 +14,11 @@ public class ProcessManagement {
 
     public static void main(String[] args) throws InterruptedException, IOException {
 
+        if(args[0]!=null)
+            instructionSet = new File(args[0]);
+
         // Parse the instruction file and construct a data structure, stored inside ProcessGraph class
+        // Change this according to the directory you want to run the code in
         ParseFile.generateGraph(new File(currentDirectory + "/src/OSLab1/" + instructionSet));
 
         // Mark initial runnable
@@ -81,6 +85,7 @@ public class ProcessManagement {
                 setNewRunnable(indices);
             }
 
+            //Sleep to slow down process execution so that user can examine the visualizer. Can be removed when the graph is huge.
             TimeUnit.SECONDS.sleep(5);
         }
 

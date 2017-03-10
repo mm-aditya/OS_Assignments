@@ -49,7 +49,10 @@ public class ProcessManagement {
             }
 
             // Set up processes that can be run, and run them
-            buildRunnableProcList(pbs, indices);
+            if (!buildRunnableProcList(pbs, indices)) {
+                System.out.println("I cannot complete all the processes. Please ask someone else.");
+                System.exit(-1);
+            }
 
             // Run the processes one by one
             for (int i = 0; i < pbs.size(); i++) {
@@ -89,7 +92,7 @@ public class ProcessManagement {
     }
 
     // Set up processes that can be run, and run them
-    private static void buildRunnableProcList(ArrayList<ProcessBuilder> builder, ArrayList<Integer> indices) {
+    private static boolean buildRunnableProcList(ArrayList<ProcessBuilder> builder, ArrayList<Integer> indices) {
         for (int i = 0; i < ProcessGraph.nodes.size(); i++) {
             ProcessGraphNode node = ProcessGraph.nodes.get(i);
             if (node.isRunnable()) {
@@ -103,6 +106,10 @@ public class ProcessManagement {
                 builder.add(temp);
             }
         }
+        if (indices.isEmpty()) {
+            return false;
+        }
+        return true;
     }
 
     // Set nodes that can now be run to runnable

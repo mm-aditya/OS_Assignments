@@ -1,6 +1,21 @@
 package OSLab1;
 
+import edu.uci.ics.jung.algorithms.layout.CircleLayout;
+import edu.uci.ics.jung.algorithms.layout.Layout;
+import edu.uci.ics.jung.graph.DirectedSparseMultigraph;
+import edu.uci.ics.jung.graph.Graph;
+import edu.uci.ics.jung.graph.SparseMultigraph;
+import edu.uci.ics.jung.graph.util.EdgeType;
+import edu.uci.ics.jung.visualization.BasicVisualizationServer;
+import edu.uci.ics.jung.visualization.decorators.ToStringLabeller;
+import edu.uci.ics.jung.visualization.renderers.Renderer;
+
 import java.util.ArrayList;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import java.awt.*;
+import java.awt.geom.*;
+
 
 public class ProcessGraph {
     // A static ArrayList of ProcessGraphNode containing all the node of the graph
@@ -54,19 +69,100 @@ public class ProcessGraph {
         }
     }
 
+
+
     // For monitoring
-    static class Monitoring implements Runnable {
+    static class Monitoring extends JFrame implements Runnable {
+
+        static int edgeCount = 0;
+        static ArrayList<Integer[]> nodeCenters;
+
+
         @Override
         public void run() {
             runGUI();
         }
+         private void runGUI(){
 
-        private void runGUI() {
-            for (ProcessGraphNode node :
-                    nodes) {
-                node.getParents();  // Edit me
+            while(true){
+                int numofEdges=0;
+                ArrayList<Sample.MyNode> nds = new ArrayList<>();
+                Graph<Sample.MyNode, Sample.MyLink> g = new DirectedSparseMultigraph<Sample.MyNode, Sample.MyLink>();
+                Sample.MyLink stdlink = new Sample.MyLink(1.0,1.0);
+                for(int i =0; i < nodes.size();i++){
+                    nds.add(new Sample.MyNode(nodes.get(i).getNodeId()));
+                }
+
+                for(ProcessGraphNode node: nodes){
+                    int indexFrom=-1;
+                    int indexto=-1;
+                    for(int i = 0;i < nds.size();i++){
+                        if(nds.get(i).id == node.getNodeId())
+                            indexFrom = i;
+                    }
+                    for(int i = 0; i < node.getChildren().size(); i ++){
+                        for(int k = 0;k < nds.size();k++){
+                            if(nds.get(k).id == node.getChildren().get(i).getNodeId())
+                                indexto = k;
+                        }
+
+                       g.addEdge(stdlink, nds.get(indexFrom),nds.get(indexto),EdgeType.DIRECTED);
+                    }
+                }
+
+                // The Layout<V, E> is parameterized by the vertex and edge types
+                Layout<Integer, String> layout = new CircleLayout(g);
+                //Layout<MyNode,MyLink> layout = new DAGLayout<MyNode,MyLink>(g);
+                layout.setSize(new Dimension(300,300)); // sets the initial size of the space
+
+                // The BasicVisualizationServer<V,E> is parameterized by the edge types
+                BasicVisualizationServer<Integer, String> vv = new BasicVisualizationServer<Integer, String>(layout);
+                vv.setPreferredSize(new Dimension(500,500)); //Sets the viewing area size
+
+                vv.getRenderContext().setVertexLabelTransformer(new ToStringLabeller());
+                //vv.getRenderContext().setEdgeLabelTransformer(new ToStringLabeller());
+                vv.getRenderer().getVertexLabelRenderer().setPosition(Renderer.VertexLabel.Position.CNTR);
+
+
+
+                JFrame frame = new JFrame("Monitoring Tool");
+                frame.setLayout(new GridBagLayout());
+                frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                frame.getContentPane().add(vv, new GridBagConstraints());
+                frame.pack();
+                frame.setVisible(true);
+
+            }
+
+
+         }
+
+        static class MyNode {
+            int id; // good coding practice would have this as private
+            public MyNode(int id) {
+                this.id = id;
+            }
+            public String toString() { // Always a good idea for debuging
+                return "V"+id; // JUNG2 makes good use of these.
             }
         }
+
+        static class MyLink {
+            double capacity; // should be private
+            double weight; // should be private for good practice
+            int id;
+
+            public MyLink(double weight, double capacity) {
+                this.id = edgeCount++; // This is defined in the outer class.
+                this.weight = weight;
+                this.capacity = capacity;
+            }
+            public String toString() { // Always good for debugging
+                return "E"+id;
+            }
+
+        }
+
     }
 
 

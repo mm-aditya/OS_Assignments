@@ -2,19 +2,19 @@
 
 ***
 
-#OS Lab 1
+# OS Lab 1
 
 * Programming Assignment 1
 * Author : Aditya Manikashetti - 1001819
 * Author : Tenzin Chan - 1001522
 * Date: 10/03/2017 
 
-##Purpose
+## Purpose
 To learn process management. We model processes and their dependencies with a Directed Acyclic Graph and manage and execute
 processes by traversing the graph. Independent processes take first priority and child processes wait on them and execute subsequently.
 The processes are executed using Java's ProcessBuilder. The program also spawns a thread which displays a graph that updates in realtime according to the status of the nodes.
   
-##Compilation 
+## Compilation 
 
 Since this code contains a visualizer you're going to have to include these JAR files in your depencies: <https://nchc.dl.sourceforge.net/project/jung/jung/jung-2.0.1/jung2-2_0_1.zip>  
   
@@ -26,7 +26,7 @@ input file as first command.  Output files will be saved in `/OS_Assignments`, w
 Once the program runs you will notice a Java applet window pop up with the DAG on it. Once all the nodes have turned green it means that the program
 has finished traversing the graph. Simply close this window to complete the program execution.
 
-##Working  
+## Working  
 > There are comments accompanying each class that explains the working in detail. Please refer to these
 comments.  
 
@@ -37,7 +37,7 @@ comments.
 * *Monitoring.class* - This is situated in ProcessGraph.java. With the help of Swing and JUNG we manage to visualize and update the graph in realtime with the state of the nodes. There isn't 
 a detailed explanation for this section as it would require a lot of space to explain the concepts of Swing and JUNG. So we have just commented it lightly.
   
-##Visualizer
+## Visualizer
   
 The visualizer is simply a window with the DAG printed on it. The update function for the node colors runs continuously in a while(true)
 loop.

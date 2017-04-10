@@ -2,7 +2,7 @@
 
 ***
 
-##OS Lab 1
+## OS Lab 1
 
 * Programming Assignment 1
 * Author : Aditya Manikashetti - 1001819

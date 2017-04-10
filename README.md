@@ -17,7 +17,7 @@ The processes are executed using Java's ProcessBuilder. The program also spawns 
 ## Compilation 
 
  Update: You can now simply navigate to the OS_Assignments_jar folder and run this command (with the graph files in the same folder):
-> java -jar OS\ Assignments.jar <name-of-graph-file>
+> java -jar OS\ Assignments.jar \<name-of-graph-file>
 
 ~~Since this code contains a visualizer you're going to have to include these JAR files in your depencies:<https://nchc.dl.sourceforge.net/project/jung/jung/jung-2.0.1/jung2-2_0_1.zip>~~  
   

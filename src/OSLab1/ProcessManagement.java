@@ -19,7 +19,7 @@ public class ProcessManagement {
 
         // Parse the instruction file and construct a data structure, stored inside ProcessGraph class
         // Change this according to the directory you want to run the code in
-        ParseFile.generateGraph(new File(currentDirectory + "/src/OSLab1/" + instructionSet));
+        ParseFile.generateGraph(instructionSet);
 
         // Mark initial runnable
         for (int i = 0; i < ProcessGraph.nodes.size(); i++) {

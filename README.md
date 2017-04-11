@@ -1,6 +1,5 @@
 # OS_Assignments
 
-* Programming Assignment 1
 * Author : Aditya Manikashetti - 1001819
 * Author : Tenzin Chan - 1001522
 * Date: 09/03/2017 

@@ -1,13 +1,12 @@
 # OS_Assignments
 
-***
-
-## OS Lab 1
-
-* Programming Assignment 1
 * Author : Aditya Manikashetti - 1001819
 * Author : Tenzin Chan - 1001522
 * Date: 09/03/2017 
+
+***
+
+## OS Assignment 1
 
 **Purpose**  
 To learn process management. We model processes and their dependencies with a Directed Acyclic Graph and manage and execute
@@ -29,3 +28,15 @@ comments.
 *ProcessManagement.java* - Traverses the graph. 
 
 
+***
+
+## Network Assignment 1
+
+**Purpose**  
+To implement a secure file upload application from a client to an Internet file server. Secure concentrates on two properties: *authenticating the ID of the file server to prevent leakage of data to unauthorized sources* and *protecting the confidentiality during upload*. 
+  
+**Compilation**  
+> In the works.
+
+**Working**  
+> In the works

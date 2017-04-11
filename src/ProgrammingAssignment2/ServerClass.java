@@ -5,7 +5,7 @@ package ProgrammingAssignment2;
  */
 public class ServerClass {
     public static void main(String[] args) {
-        SecStore server = new SecStore(4321, 5);
-
+        SecStore server = new SecStore(6789, 5);
+        server.startServer();
     }
 }

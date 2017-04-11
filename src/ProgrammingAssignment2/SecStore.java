@@ -40,53 +40,55 @@ public class SecStore {
         portNum = port;
         exec = Executors.newFixedThreadPool(numThreads);
         try {
-            privateKey = getPrivateKey("src\\CSE\\ProgrammingAssignment2\\privateServer.der");
-            InputStream certLoc = new FileInputStream("src\\CSE\\ProgrammingAssignment2\\1001522.crt");
+            privateKey = getPrivateKey("src\\ProgrammingAssignment2\\privateServer.der");
             CertificateFactory cf = CertificateFactory.getInstance("X.509");
-            serverCert = (X509Certificate) cf.generateCertificate(certLoc);
+            serverCert = (X509Certificate) cf.generateCertificate(new FileInputStream("src\\ProgrammingAssignment2\\1001522.crt"));
         } catch (Exception e) {
             System.out.println(e.getMessage());
+            e.printStackTrace();
         }
     }
 
     public void startServer() {
         try {
             server = new ServerSocket(portNum);
-            server.setSoTimeout(10000);
+            while (true) {
+                final Socket connection = server.accept();
+                Runnable task = () -> {
+                    try {
+                        handleRequest(connection);
+                    } catch (Exception e) {
+                        System.out.println(e.getMessage());
+                        e.printStackTrace();
+                    }
+                };
+                exec.execute(task);
+            }
         } catch (IOException ioE) {
             System.out.println(ioE.getMessage());
-        }
-        while (true) {
-            try {
-                final Socket connection = server.accept();
-                Runnable task = () -> handleRequest(connection);
-                exec.execute(task);
-            } catch (IOException ioE) {
-                System.out.println(ioE.getMessage());
-            }
+            ioE.printStackTrace();
         }
     }
 
-    private void handleRequest(Socket socketConnection) {
-        try {
-            InputStreamReader reader = new InputStreamReader(socketConnection.getInputStream());
-            OutputStream writer = socketConnection.getOutputStream();
-            BufferedReader buff = new BufferedReader(reader);
-            String inLine;
-            if ((inLine = buff.readLine()).equals("HI")) {
-                writer.write(encryptBytes("Meow".getBytes()));
-                writer.flush();
-            }
-            if ((inLine = buff.readLine()).equals("Cert pls")) {
-                writer.write(serverCert.getEncoded());
-                writer.flush();
-            }
-//            if ((inLine = buff.readLine()).equals("OK CAN")) {
+    private void handleRequest(Socket socketConnection) throws Exception {
+        OutputStream out = socketConnection.getOutputStream();
+        InputStream in = socketConnection.getInputStream();
+        System.out.println("Connection established");
+        PrintWriter printer = new PrintWriter(out);
+        BufferedReader buff = new BufferedReader(new InputStreamReader(in));
+        String inLine = buff.readLine();
+        if (inLine.equals("HI")) {  // TODO: Still need to do the nonce thing.
+            out.write(encryptBytes("Meow".getBytes()));
+            out.flush();
+        }
+        inLine = buff.readLine();
+        if (inLine.equals("Cert pls")) {
+            out.write(serverCert.getEncoded());
+            out.flush();    // reaches here fine
+        }
+//            if (inLine.equals("OK CAN")) {
 //                receiveFile();
 //            }
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
     }
 
     private void receiveFile() {
@@ -100,38 +102,15 @@ public class SecStore {
         return kf.generatePrivate(spec);
     }
 
-    public static PublicKey getPublicKey(String filename)
-            throws Exception {
-
-        byte[] keyBytes = Files.readAllBytes(new File(filename).toPath());
-
-        X509EncodedKeySpec spec =
-                new X509EncodedKeySpec(keyBytes);
-        KeyFactory kf = KeyFactory.getInstance("RSA");
-        return kf.generatePublic(spec);
+    private byte[] encryptBytes(byte[] toBeEncrypted) throws Exception {
+        Cipher desCipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+        desCipher.init(Cipher.ENCRYPT_MODE, privateKey);
+        return desCipher.doFinal(toBeEncrypted);
     }
 
-    private byte[] encryptBytes(byte[] toBeEncrypted) {
-        try {
-//            Cipher desCipher = Cipher.getInstance("RSA/ECB/PKCS5Padding");
-            Cipher desCipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-            desCipher.init(Cipher.ENCRYPT_MODE, privateKey);
-            return desCipher.doFinal(toBeEncrypted);
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
-        return null;
-    }
-
-    private byte[] decryptBytes(byte[] toBeDecrypted) {
-        try {
-//            Cipher desCipher = Cipher.getInstance("RSA/ECB/PKCS5Padding");
-            Cipher desCipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-            desCipher.init(Cipher.DECRYPT_MODE, serverCert.getPublicKey());
-            return desCipher.doFinal(toBeDecrypted);
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
-        return null;
+    private byte[] decryptBytes(byte[] toBeDecrypted) throws Exception {
+        Cipher desCipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+        desCipher.init(Cipher.DECRYPT_MODE, serverCert.getPublicKey());
+        return desCipher.doFinal(toBeDecrypted);
     }
 }

@@ -1,7 +1,5 @@
 package ProgrammingAssignment2;
 
-import sun.misc.IOUtils;
-
 import javax.crypto.Cipher;
 import javax.xml.bind.DatatypeConverter;
 import java.io.*;
@@ -54,13 +52,13 @@ public class Client {
 
     private void handshake() throws Exception {
         printer.println("HI");
-        byte[] stuff = readAll();
+        byte[] stuff = readAll();   // This is too long?
         printer.println("Cert pls");
         System.out.println("Asking for cert");
         byte[] byteCert = readAll();
-        System.out.println(Arrays.toString(byteCert));  // it's not reading anything...
+        System.out.println(Arrays.toString(byteCert));
         serverCert = getCert(byteCert);
-        if ("Meow".equals(new String(decryptBytes(DatatypeConverter.printBase64Binary(stuff).getBytes())))) {
+        if ("Meow".equals(new String(DatatypeConverter.printBase64Binary(decryptBytes(stuff)).getBytes()))) {
             printer.println("OK CAN");
         }
         System.out.println("WOOO");
@@ -77,12 +75,14 @@ public class Client {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         int nRead;
         byte[] data = new byte[16384];
+//        byte[] data = new byte[651];
         in.read(data, 0, data.length);
 //        while ((nRead = in.read(data, 0, data.length)) != -1) {
 //            buffer.write(data, 0, nRead);
 //        }
         buffer.flush();
-        return buffer.toByteArray();
+        return data;
+//        return buffer.toByteArray();
     }
 
 //    private byte[] encryptBytes(byte[] toBeEncrypted) throws Exception {
@@ -92,8 +92,8 @@ public class Client {
 //    }
 
     private byte[] decryptBytes(byte[] toBeDecrypted) throws Exception {
-        Cipher desCipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-        desCipher.init(Cipher.DECRYPT_MODE, serverCert.getPublicKey());
-        return desCipher.doFinal(toBeDecrypted);
+        Cipher rsaCipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+        rsaCipher.init(Cipher.DECRYPT_MODE, serverCert.getPublicKey());
+        return rsaCipher.doFinal(toBeDecrypted);
     }
 }

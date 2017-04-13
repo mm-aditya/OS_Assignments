@@ -2,16 +2,14 @@ package ProgrammingAssignment2;
 
 import javax.crypto.Cipher;
 import java.io.*;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.net.*;
 import java.nio.file.Files;
+import java.security.Key;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.X509EncodedKeySpec;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -52,6 +50,10 @@ public class SecStore {
     public void startServer() {
         try {
             server = new ServerSocket(portNum);
+//            Enum<NetworkInterface> meow = NetworkInterface.getNetworkInterfaces();
+//            while (meow.hasMoreElements()){
+//                System.out.println(NetworkInterface.getNetworkInterfaces().nextElement());
+//            }
             while (true) {
                 final Socket connection = server.accept();
                 Runnable task = () -> {
@@ -77,22 +79,35 @@ public class SecStore {
         PrintWriter printer = new PrintWriter(out);
         BufferedReader buff = new BufferedReader(new InputStreamReader(in));
         String inLine = buff.readLine();
-        if (inLine.equals("HI")) {  // TODO: Still need to do the nonce thing.
-            out.write(encryptBytes("Meow".getBytes()));
-            out.flush();
-        }
+        out.write(encryptBytes(inLine.getBytes(), "RSA/ECB/PKCS1Padding", privateKey));
         inLine = buff.readLine();
         if (inLine.equals("Cert pls")) {
             out.write(serverCert.getEncoded());
-            out.flush();    // reaches here fine
+            out.flush();
         }
-//            if (inLine.equals("OK CAN")) {
-//                receiveFile();
-//            }
+        if (inLine.equals("OK CAN")) {
+            receiveFile();
+        }
     }
 
     private void receiveFile() {
+        System.out.println("BOOYAH");
+    }
 
+    private byte[] readAll(InputStream in) throws Exception {
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        int nRead;
+        byte[] data = new byte[16384];
+        while (true) {
+            try {
+                nRead = in.read(data, 0, data.length);
+                buffer.write(data, 0, nRead);
+            } catch (SocketTimeoutException sTimeout) {
+                break;
+            }
+        }
+        buffer.flush();
+        return buffer.toByteArray();
     }
 
     private PrivateKey getPrivateKey(String location) throws Exception {
@@ -102,15 +117,15 @@ public class SecStore {
         return kf.generatePrivate(spec);
     }
 
-    private byte[] encryptBytes(byte[] toBeEncrypted) throws Exception {
-        Cipher desCipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-        desCipher.init(Cipher.ENCRYPT_MODE, privateKey);
-        return desCipher.doFinal(toBeEncrypted);
+    private byte[] encryptBytes(byte[] toBeEncrypted, String encryptType, Key key) throws Exception {
+        Cipher rsaCipher = Cipher.getInstance(encryptType);
+        rsaCipher.init(Cipher.ENCRYPT_MODE, key);
+        return rsaCipher.doFinal(toBeEncrypted);
     }
 
-    private byte[] decryptBytes(byte[] toBeDecrypted) throws Exception {
-        Cipher desCipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-        desCipher.init(Cipher.DECRYPT_MODE, serverCert.getPublicKey());
-        return desCipher.doFinal(toBeDecrypted);
+    private byte[] decryptBytes(byte[] toBeDecrypted, String encryptType, Key key) throws Exception {
+        Cipher rsaCipher = Cipher.getInstance(encryptType);
+        rsaCipher.init(Cipher.DECRYPT_MODE, key);
+        return rsaCipher.doFinal(toBeDecrypted);
     }
 }

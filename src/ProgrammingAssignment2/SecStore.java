@@ -94,7 +94,7 @@ public class SecStore {
 
     private void receiveFile(InputStream inputStream, String decryptType, Key key) throws Exception {
         System.out.println("BOOYAH");
-        String message = DatatypeConverter.printBase64Binary(decryptBytes(readAll(inputStream), decryptType, key));
+        String message = new String(decryptBytes(readAll(inputStream), decryptType, key));
         System.out.println(message);    // not the right message. Aditya pls halp.
     }
 

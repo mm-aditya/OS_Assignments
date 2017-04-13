@@ -1,6 +1,9 @@
 package ProgrammingAssignment2;
 
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.xml.bind.DatatypeConverter;
 import java.io.*;
 import java.net.*;
 import java.nio.file.Files;
@@ -50,10 +53,6 @@ public class SecStore {
     public void startServer() {
         try {
             server = new ServerSocket(portNum);
-//            Enum<NetworkInterface> meow = NetworkInterface.getNetworkInterfaces();
-//            while (meow.hasMoreElements()){
-//                System.out.println(NetworkInterface.getNetworkInterfaces().nextElement());
-//            }
             while (true) {
                 final Socket connection = server.accept();
                 Runnable task = () -> {
@@ -76,7 +75,7 @@ public class SecStore {
         OutputStream out = socketConnection.getOutputStream();
         InputStream in = socketConnection.getInputStream();
         System.out.println("Connection established");
-        PrintWriter printer = new PrintWriter(out);
+//        PrintWriter printer = new PrintWriter(out);
         BufferedReader buff = new BufferedReader(new InputStreamReader(in));
         String inLine = buff.readLine();
         out.write(encryptBytes(inLine.getBytes(), "RSA/ECB/PKCS1Padding", privateKey));
@@ -85,13 +84,18 @@ public class SecStore {
             out.write(serverCert.getEncoded());
             out.flush();
         }
+        inLine = buff.readLine();
         if (inLine.equals("OK CAN")) {
-            receiveFile();
+            // TODO: send a sym key then wait (CP2)
+            socketConnection.setSoTimeout(10000);   // TODO: clean up sockets and maybe reset timeout
+            receiveFile(in, "RSA/ECB/PKCS1Padding", privateKey);
         }
     }
 
-    private void receiveFile() {
+    private void receiveFile(InputStream inputStream, String decryptType, Key key) throws Exception {
         System.out.println("BOOYAH");
+        String message = DatatypeConverter.printBase64Binary(decryptBytes(readAll(inputStream), decryptType, key));
+        System.out.println(message);    // not the right message. Aditya pls halp.
     }
 
     private byte[] readAll(InputStream in) throws Exception {
@@ -118,14 +122,71 @@ public class SecStore {
     }
 
     private byte[] encryptBytes(byte[] toBeEncrypted, String encryptType, Key key) throws Exception {
-        Cipher rsaCipher = Cipher.getInstance(encryptType);
-        rsaCipher.init(Cipher.ENCRYPT_MODE, key);
-        return rsaCipher.doFinal(toBeEncrypted);
+        Cipher cipher = Cipher.getInstance(encryptType);
+        cipher.init(Cipher.ENCRYPT_MODE, key);
+        return cipher.doFinal(toBeEncrypted);
     }
 
     private byte[] decryptBytes(byte[] toBeDecrypted, String encryptType, Key key) throws Exception {
-        Cipher rsaCipher = Cipher.getInstance(encryptType);
-        rsaCipher.init(Cipher.DECRYPT_MODE, key);
-        return rsaCipher.doFinal(toBeDecrypted);
+        Cipher cipher = Cipher.getInstance(encryptType);
+        cipher.init(Cipher.DECRYPT_MODE, key);
+//        return rsaCipher.doFinal(toBeDecrypted);
+        return blockCipher(toBeDecrypted, Cipher.DECRYPT_MODE, cipher);
+    }
+
+    private byte[] blockCipher(byte[] bytes, int mode, Cipher cipher) throws IllegalBlockSizeException, BadPaddingException {
+        // string initialize 2 buffers.
+        // scrambled will hold intermediate results
+        byte[] scrambled = new byte[0];
+
+        // toReturn will hold the total result
+        byte[] toReturn = new byte[0];
+        // if we encrypt we use 117 byte long blocks. Decryption requires 128 byte long blocks (because of RSA)
+        int length = (mode == Cipher.ENCRYPT_MODE) ? 117 : 128;
+
+        // another buffer. this one will hold the bytes that have to be modified in this step
+        byte[] buffer = new byte[length];
+
+        for (int i = 0; i < bytes.length; i++) {
+
+            // if we filled our buffer array we have our block ready for de- or encryption
+            if ((i > 0) && (i % length == 0)) {
+                //execute the operation
+                scrambled = cipher.doFinal(buffer);
+                // add the result to our total result.
+                toReturn = append(toReturn, scrambled);
+                // here we calculate the length of the next buffer required
+                int newlength = length;
+
+                // if newlength would be longer than remaining bytes in the bytes array we shorten it.
+                if (i + length > bytes.length) {
+                    newlength = bytes.length - i;
+                }
+                // clean the buffer array
+                buffer = new byte[newlength];
+            }
+            // copy byte into our buffer.
+            buffer[i % length] = bytes[i];
+        }
+
+        // this step is needed if we had a trailing buffer. should only happen when encrypting.
+        // example: we encrypt 110 bytes. 100 bytes per run means we "forgot" the last 10 bytes. they are in the buffer array
+        scrambled = cipher.doFinal(buffer);
+
+        // final step before we can return the modified data.
+        toReturn = append(toReturn, scrambled);
+
+        return toReturn;
+    }
+
+    private byte[] append(byte[] prefix, byte[] suffix) {
+        byte[] toReturn = new byte[prefix.length + suffix.length];
+        for (int i = 0; i < prefix.length; i++) {
+            toReturn[i] = prefix[i];
+        }
+        for (int i = 0; i < suffix.length; i++) {
+            toReturn[i + prefix.length] = suffix[i];
+        }
+        return toReturn;
     }
 }

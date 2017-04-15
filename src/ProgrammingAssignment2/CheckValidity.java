@@ -14,8 +14,8 @@ import java.security.cert.X509Certificate;
 public class CheckValidity {
     public static void main(String[] args) {
         try {
-            InputStream fis = new FileInputStream("src\\CSE\\ProgrammingAssignment2\\CA.crt");
-            InputStream myFile = new FileInputStream("src\\CSE\\ProgrammingAssignment2\\1001522.crt");
+            InputStream fis = new FileInputStream("src\\ProgrammingAssignment2\\CA.crt");
+            InputStream myFile = new FileInputStream("src\\ProgrammingAssignment2\\1001522.crt");
             CertificateFactory cf = CertificateFactory.getInstance("X.509");
             X509Certificate CAcert =(X509Certificate)cf.generateCertificate(fis);
             X509Certificate myCert = (X509Certificate) cf.generateCertificate(myFile);

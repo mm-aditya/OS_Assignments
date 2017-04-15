@@ -1,14 +1,12 @@
 package ProgrammingAssignment2;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.xml.bind.DatatypeConverter;
+import javax.crypto.*;
 import java.io.*;
 import java.net.*;
 import java.nio.file.Files;
 import java.security.Key;
 import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -75,8 +73,8 @@ public class SecStore {
         OutputStream out = socketConnection.getOutputStream();
         InputStream in = socketConnection.getInputStream();
         System.out.println("Connection established");
-
         BufferedReader buff = new BufferedReader(new InputStreamReader(in));
+        SecretKey symKey;
         String inLine = buff.readLine();
         out.write(encryptBytes(inLine.getBytes(), "RSA/ECB/PKCS1Padding", privateKey));
         inLine = buff.readLine();
@@ -86,16 +84,46 @@ public class SecStore {
         }
         inLine = buff.readLine();
         if (inLine.equals("OK CAN")) {
-            // TODO: send a sym key then wait (CP2)
-            socketConnection.setSoTimeout(10000);   // TODO: clean up sockets and maybe reset timeout
-            receiveFile(in, "RSA/ECB/PKCS1Padding", privateKey);
+            symKey = getSecretKey();
+            out.write(encryptBytes(symKey.getEncoded(), "RSA/ECB/PKCS1Padding", privateKey));
+            waitingForUpload(socketConnection, buff, in, symKey);
+            out.close();
         }
     }
 
-    private void receiveFile(InputStream inputStream, String decryptType, Key key) throws Exception {
-        System.out.println("BOOYAH");
+    private void waitingForUpload(Socket conn, BufferedReader reader, InputStream in, SecretKey symKey) throws Exception {
+        try {
+            while (true) {
+                String inLine = reader.readLine();
+                if (inLine.equals("AES")) {
+                    receiveFile(conn, reader, in, "AES/ECB/PKCS5Padding", symKey);
+                } else if (inLine.equals("RSA")) {
+                    receiveFile(conn, reader, in, "RSA/ECB/PKCS1Padding", privateKey);
+                    // TODO: need a function that waits for files or until socket closes or server shuts down to close all connections.
+                }
+            }
+        } catch (SocketException se) {
+            System.out.println("Socket has closed. Thank you for your patronage.");
+            in.close();
+            reader.close();
+            conn.close();
+            return;
+        }
+    }
+
+    private void receiveFile(Socket conn, BufferedReader nameReader, InputStream inputStream, String decryptType, Key key) throws Exception {
+        String fileName = nameReader.readLine();
+        conn.setSoTimeout(10000);
         String message = new String(decryptBytes(readAll(inputStream), decryptType, key));
-        // TODO: save the file
+        FileWriter fileWriter = new FileWriter("PA2Saved\\" + fileName);
+        fileWriter.write(message);
+        fileWriter.close();
+        conn.setSoTimeout(0);
+        PrintWriter writer = new PrintWriter(conn.getOutputStream(), true);
+        writer.println("Done!");
+        Thread.sleep(5);
+        writer.close();
+        System.out.println("Yey");
     }
 
     private PrivateKey getPrivateKey(String location) throws Exception {
@@ -105,17 +133,23 @@ public class SecStore {
         return kf.generatePrivate(spec);
     }
 
+    private SecretKey getSecretKey() throws NoSuchAlgorithmException {
+        KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+        SecretKey secretKey = keyGen.generateKey();
+        return secretKey;
+    }
+
     private byte[] encryptBytes(byte[] toBeEncrypted, String encryptType, Key key) throws Exception {
         Cipher cipher = Cipher.getInstance(encryptType);
         cipher.init(Cipher.ENCRYPT_MODE, key);
         return cipher.doFinal(toBeEncrypted);
     }
 
-    private byte[] decryptBytes(byte[] toBeDecrypted, String encryptType, Key key) throws Exception {
-        Cipher cipher = Cipher.getInstance(encryptType);
+    private byte[] decryptBytes(byte[] toBeDecrypted, String decryptType, Key key) throws Exception {
+        Cipher cipher = Cipher.getInstance(decryptType);
         cipher.init(Cipher.DECRYPT_MODE, key);
-//        return rsaCipher.doFinal(toBeDecrypted);
-        return blockCipher(toBeDecrypted, Cipher.DECRYPT_MODE, cipher);
+        if (decryptType.contains("AES")) return cipher.doFinal(toBeDecrypted);
+        else return blockCipher(toBeDecrypted, Cipher.DECRYPT_MODE, cipher);
     }
 
     private byte[] readAll(InputStream in) throws Exception {

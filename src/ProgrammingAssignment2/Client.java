@@ -1,9 +1,7 @@
 package ProgrammingAssignment2;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.xml.bind.DatatypeConverter;
+import javax.crypto.*;
+import javax.crypto.spec.SecretKeySpec;
 import java.io.*;
 import java.math.BigInteger;
 import java.net.InetSocketAddress;
@@ -11,6 +9,7 @@ import java.net.Socket;
 import java.net.SocketAddress;
 import java.net.SocketTimeoutException;
 import java.security.Key;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -27,23 +26,37 @@ public class Client {
     private BufferedReader reader;
     private X509Certificate serverCert;
     private X509Certificate CACert;
+    private SecretKey symKey;
 
     public static void main(String[] args) {
-        Client client = new Client(6789);
+        Client client = new Client("localhost", 6789);
         try {
             client.handshake();
-            client.uploadFile("src\\ProgrammingAssignment2\\sampleData\\smallFile.txt", "RSA/ECB/PKCS1Padding");
+            int numTrial = 10;
+            System.out.println("Pure RSA: small");
+            long start = System.currentTimeMillis();
+            for (int i = 0; i < numTrial; i++) {
+                client.uploadFile("src\\ProgrammingAssignment2\\sampleData\\smallFile.txt", "smallRSA.txt" + i, "RSA/ECB/PKCS1Padding");
+                System.out.println(System.currentTimeMillis());
+            }
+            long total = System.currentTimeMillis() - start;
+            long average = total / numTrial;
+            System.out.println("Average time: " + average);
+
+
+//            client.uploadFile("src\\ProgrammingAssignment2\\sampleData\\smallFile.txt", "meow.txt", "AES/ECB/PKCS5Padding");
             System.out.println("Ok uploaded.");
+            while (true) ;
         } catch (Exception e) {
             System.out.println(e.getMessage());
             e.printStackTrace();
         }
     }
 
-    public Client(int portNum) {
+    public Client(String ipAddress, int portNum) {
         portNumber = portNum;
         socket = new Socket();
-        SocketAddress sockaddr = new InetSocketAddress("localhost", portNumber);    // set this to IP address of server
+        SocketAddress sockaddr = new InetSocketAddress(ipAddress, portNumber);    // set this to IP address of server
         try {
             socket.connect(sockaddr);
             socket.setSoTimeout(10000);
@@ -60,18 +73,16 @@ public class Client {
 
     private void handshake() throws Exception {
         String cNonce = generateCnonce();
-//        printer.println(cNonce);
-        out.write(cNonce.getBytes());
+        printer.println(cNonce);
         byte[] encryptedCnonce = readAll(in);
-//        printer.println("Cert pls");
-        out.write("Cert pls".getBytes());
+        printer.println("Cert pls");
         System.out.println("Asking for cert");
         byte[] byteCert = readAll(in);
         serverCert = getCert(byteCert);
-
         if (verifyServer(cNonce, encryptedCnonce, serverCert.getPublicKey())) {
-            printer.println("OK CAN");  // TODO: all the printer functions should be encrypted using public key and written with out
-            System.out.println("YAY");
+            printer.println("OK CAN");
+            byte[] byteSecretKey = decryptBytes(readAll(in), "RSA/ECB/PKCS1Padding", serverCert.getPublicKey());
+            getSymKey(byteSecretKey);
         }
     }
 
@@ -89,8 +100,8 @@ public class Client {
     }
 
     private void verifyCert(X509Certificate certificate) throws Exception {
-        CACert.checkValidity();
-        CACert.verify(certificate.getPublicKey());
+        certificate.checkValidity();
+        certificate.verify(CACert.getPublicKey());
     }
 
     private byte[] readAll(InputStream in) throws Exception {
@@ -115,25 +126,42 @@ public class Client {
         return blockCipher(toBeEncrypted, Cipher.ENCRYPT_MODE, cipher);
     }
 
-    private byte[] decryptBytes(byte[] toBeDecrypted, String encryptType, Key key) throws Exception {
-        Cipher cipher = Cipher.getInstance(encryptType);
+    private byte[] decryptBytes(byte[] toBeDecrypted, String decryptType, Key key) throws Exception {
+        Cipher cipher = Cipher.getInstance(decryptType);
         cipher.init(Cipher.DECRYPT_MODE, key);
         return blockCipher(toBeDecrypted, Cipher.DECRYPT_MODE, cipher);
     }
 
-    private void uploadFile(String pathToFile, String encryptionType) throws Exception {
-        File upload = new File(pathToFile);
-        BufferedReader reader = new BufferedReader(new FileReader(upload));
+    private void uploadFile(String pathToFile, String name, String encryptionType) throws Exception {
         Key key;
         if (encryptionType.contains("RSA")) key = serverCert.getPublicKey();
-        else key = serverCert.getPublicKey();   // TODO: implement the private key part here
+        else key = symKey;
+        printer.println(encryptionType.substring(0, 3));
+        out.write((name + "\n").getBytes());
+        File upload = new File(pathToFile);
+        BufferedReader reader = new BufferedReader(new FileReader(upload));
         String message;
         String toEncrypt = "";
         while ((message = reader.readLine()) != null) {
-            toEncrypt += message;
+            toEncrypt += message + "\n";
         }
-        System.out.println(toEncrypt);
         out.write(encryptBytes(toEncrypt.getBytes(), encryptionType, key));
+        out.flush();
+        waitForServer();
+    }
+
+    private void waitForServer() throws Exception {
+        socket.setSoTimeout(0);
+        String line = reader.readLine();
+//        while ((line = reader.readLine()) == null);
+        socket.setSoTimeout(10000);
+//        if (line.equals("Done!")) {
+//            return;
+//        }
+    }
+
+    private void getSymKey(byte[] encodedKey) throws NoSuchAlgorithmException {
+        symKey = new SecretKeySpec(encodedKey, "AES");
     }
 
     private String generateCnonce() {

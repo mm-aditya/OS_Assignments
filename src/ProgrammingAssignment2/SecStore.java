@@ -115,12 +115,14 @@ public class SecStore {
 
     private void receiveFile(Socket conn, PrintWriter writer, BufferedReader nameReader, InputStream inputStream, String decryptType, Key key) throws Exception {
         String fileName = nameReader.readLine();
-//        conn.setSoTimeout(10000);
-        String message = new String(decryptBytes(readAll(inputStream), decryptType, key));
+        conn.setSoTimeout(100);   // need this becuase of the readAll method
+        byte[] toEncrypt = readAll(inputStream);
+        System.out.println(Arrays.toString(toEncrypt));
+        String message = new String(decryptBytes(toEncrypt, decryptType, key));
         FileWriter fileWriter = new FileWriter("PA2Saved\\" + fileName);
         fileWriter.write(message);
         fileWriter.close();
-//        conn.setSoTimeout(0);
+        conn.setSoTimeout(0);
         writer.println("Done!");
         System.out.println("Yey");
     }
@@ -158,12 +160,12 @@ public class SecStore {
             try {
                 nRead = in.read(data, 0, data.length);
                 buffer.write(data, 0, nRead);
-                System.out.println(Arrays.toString(data));
+//                System.out.println(Arrays.toString(data));
             } catch (SocketTimeoutException sTimeout) {
+                System.out.println("Getting out");
                 break;
             }
         }
-        buffer.flush();
         return buffer.toByteArray();
     }
 

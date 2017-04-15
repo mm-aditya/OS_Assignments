@@ -33,8 +33,8 @@ public class Client {
         try {
             client.handshake();
             int numTrial = 1;
-            System.out.println("Pure RSA: small");
-            client.testEncryption(numTrial, "RSA", "src\\ProgrammingAssignment2\\sampleData\\smallFile.txt", "smallRSA.txt");
+//            System.out.println("Pure RSA: small");
+//            client.testEncryption(numTrial, "RSA", "src\\ProgrammingAssignment2\\sampleData\\smallFile.txt", "smallRSA.txt");
             System.out.println("Pure RSA: medium");
             client.testEncryption(numTrial, "RSA", "src\\ProgrammingAssignment2\\sampleData\\medianFile.txt", "mediumRSA.txt");
             System.out.println("Pure RSA: large");
@@ -136,8 +136,6 @@ public class Client {
         Key key;
         if (encryptionType.contains("RSA")) key = serverCert.getPublicKey();
         else key = symKey;
-        printer.println(encryptionType.substring(0, 3));
-        out.write((name + "\n").getBytes());
         File upload = new File(pathToFile);
         BufferedReader reader = new BufferedReader(new FileReader(upload));
         String message;
@@ -145,7 +143,10 @@ public class Client {
         while ((message = reader.readLine()) != null) {
             toEncrypt += message + "\n";
         }
-        out.write(encryptBytes(toEncrypt.getBytes(), encryptionType, key));
+        byte[] toSend = encryptBytes(toEncrypt.getBytes(), encryptionType, key);
+        printer.println(encryptionType.substring(0, 3));
+        out.write((name + "\n").getBytes());
+        out.write(toSend);
         out.flush();
         waitForServer();
     }

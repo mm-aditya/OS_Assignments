@@ -75,7 +75,7 @@ public class SecStore {
         OutputStream out = socketConnection.getOutputStream();
         InputStream in = socketConnection.getInputStream();
         System.out.println("Connection established");
-//        PrintWriter printer = new PrintWriter(out);
+
         BufferedReader buff = new BufferedReader(new InputStreamReader(in));
         String inLine = buff.readLine();
         out.write(encryptBytes(inLine.getBytes(), "RSA/ECB/PKCS1Padding", privateKey));
@@ -95,23 +95,7 @@ public class SecStore {
     private void receiveFile(InputStream inputStream, String decryptType, Key key) throws Exception {
         System.out.println("BOOYAH");
         String message = new String(decryptBytes(readAll(inputStream), decryptType, key));
-        System.out.println(message);    // not the right message. Aditya pls halp.
-    }
-
-    private byte[] readAll(InputStream in) throws Exception {
-        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-        int nRead;
-        byte[] data = new byte[16384];
-        while (true) {
-            try {
-                nRead = in.read(data, 0, data.length);
-                buffer.write(data, 0, nRead);
-            } catch (SocketTimeoutException sTimeout) {
-                break;
-            }
-        }
-        buffer.flush();
-        return buffer.toByteArray();
+        // TODO: save the file
     }
 
     private PrivateKey getPrivateKey(String location) throws Exception {
@@ -132,6 +116,22 @@ public class SecStore {
         cipher.init(Cipher.DECRYPT_MODE, key);
 //        return rsaCipher.doFinal(toBeDecrypted);
         return blockCipher(toBeDecrypted, Cipher.DECRYPT_MODE, cipher);
+    }
+
+    private byte[] readAll(InputStream in) throws Exception {
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        int nRead;
+        byte[] data = new byte[16384];
+        while (true) {
+            try {
+                nRead = in.read(data, 0, data.length);
+                buffer.write(data, 0, nRead);
+            } catch (SocketTimeoutException sTimeout) {
+                break;
+            }
+        }
+        buffer.flush();
+        return buffer.toByteArray();
     }
 
     private byte[] blockCipher(byte[] bytes, int mode, Cipher cipher) throws IllegalBlockSizeException, BadPaddingException {

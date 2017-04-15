@@ -32,6 +32,8 @@ public class Client {
         Client client = new Client(6789);
         try {
             client.handshake();
+            client.uploadFile("src\\ProgrammingAssignment2\\sampleData\\smallFile.txt", "RSA/ECB/PKCS1Padding");
+            System.out.println("Ok uploaded.");
         } catch (Exception e) {
             System.out.println(e.getMessage());
             e.printStackTrace();
@@ -58,18 +60,18 @@ public class Client {
 
     private void handshake() throws Exception {
         String cNonce = generateCnonce();
-        printer.println(cNonce);
+//        printer.println(cNonce);
+        out.write(cNonce.getBytes());
         byte[] encryptedCnonce = readAll(in);
-        printer.println("Cert pls");
+//        printer.println("Cert pls");
+        out.write("Cert pls".getBytes());
         System.out.println("Asking for cert");
         byte[] byteCert = readAll(in);
         serverCert = getCert(byteCert);
+
         if (verifyServer(cNonce, encryptedCnonce, serverCert.getPublicKey())) {
             printer.println("OK CAN");  // TODO: all the printer functions should be encrypted using public key and written with out
             System.out.println("YAY");
-            uploadFile(out, "src\\ProgrammingAssignment2\\sampleData\\smallFile.txt", "RSA/ECB/PKCS1Padding");
-            System.out.println("Ok uploaded.");
-            while (true) ;
         }
     }
 
@@ -80,8 +82,15 @@ public class Client {
     private X509Certificate getCert(byte[] byteCert) throws Exception {
         CertificateFactory cf = CertificateFactory.getInstance("X.509");
         InputStream stream = new ByteArrayInputStream(byteCert);
-        X509Certificate certificate = (X509Certificate) cf.generateCertificate(stream); // TODO: verify using CAcert
+        X509Certificate certificate = (X509Certificate) cf.generateCertificate(stream);
+        stream.close();
+        verifyCert(certificate);
         return certificate;
+    }
+
+    private void verifyCert(X509Certificate certificate) throws Exception {
+        CACert.checkValidity();
+        CACert.verify(certificate.getPublicKey());
     }
 
     private byte[] readAll(InputStream in) throws Exception {
@@ -112,7 +121,7 @@ public class Client {
         return blockCipher(toBeDecrypted, Cipher.DECRYPT_MODE, cipher);
     }
 
-    private void uploadFile(OutputStream out, String pathToFile, String encryptionType) throws Exception {
+    private void uploadFile(String pathToFile, String encryptionType) throws Exception {
         File upload = new File(pathToFile);
         BufferedReader reader = new BufferedReader(new FileReader(upload));
         Key key;
@@ -129,6 +138,13 @@ public class Client {
 
     private String generateCnonce() {
         return new BigInteger(50, new SecureRandom()).toString();
+    }
+
+    public void closeConnection() throws Exception {
+        in.close();
+        out.close();
+        reader.close();
+        socket.close();
     }
 
     private byte[] blockCipher(byte[] bytes, int mode, Cipher cipher) throws IllegalBlockSizeException, BadPaddingException {

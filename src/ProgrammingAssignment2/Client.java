@@ -32,21 +32,21 @@ public class Client {
         Client client = new Client("localhost", 6789);
         try {
             client.handshake();
-            int numTrial = 10; 
+            int numTrial = 10;
             System.out.println("Pure RSA: small");
-            long start = System.currentTimeMillis();
-            for (int i = 0; i < numTrial; i++) {
-                client.uploadFile("src\\ProgrammingAssignment2\\sampleData\\smallFile.txt", "smallRSA.txt" + i, "RSA/ECB/PKCS1Padding");
-                System.out.println(System.currentTimeMillis());
-            }
-            long total = System.currentTimeMillis() - start;
-            long average = total / numTrial;
-            System.out.println("Average time: " + average);
-
-
+            client.testEncryption(numTrial, "RSA", "src\\ProgrammingAssignment2\\sampleData\\smallFile.txt", "smallRSA.txt");
+            System.out.println("Pure RSA: medium");
+            client.testEncryption(numTrial, "RSA", "src\\ProgrammingAssignment2\\sampleData\\medianFile.txt", "mediumRSA.txt");
+            System.out.println("Pure RSA: large");
+            client.testEncryption(numTrial, "RSA", "src\\ProgrammingAssignment2\\sampleData\\largeFile.txt", "largeRSA.txt");
+            System.out.println("RSA + AES: small");
+            client.testEncryption(numTrial, "RSA", "src\\ProgrammingAssignment2\\sampleData\\smallFile.txt", "smallAES.txt");
+            System.out.println("RSA + AES: medium");
+            client.testEncryption(numTrial, "RSA", "src\\ProgrammingAssignment2\\sampleData\\medianFile.txt", "mediumAES.txt");
+            System.out.println("RSA + AES: large");
+            client.testEncryption(numTrial, "RSA", "src\\ProgrammingAssignment2\\sampleData\\largeFile.txt", "largeAES.txt");
 //            client.uploadFile("src\\ProgrammingAssignment2\\sampleData\\smallFile.txt", "meow.txt", "AES/ECB/PKCS5Padding");
-            System.out.println("Ok uploaded.");
-            while (true) ;
+            System.out.println("Ok all done.");
         } catch (Exception e) {
             System.out.println(e.getMessage());
             e.printStackTrace();
@@ -152,12 +152,12 @@ public class Client {
 
     private void waitForServer() throws Exception {
         socket.setSoTimeout(0);
-        String line = reader.readLine();
-//        while ((line = reader.readLine()) == null);
+        String line;
+        while ((line = reader.readLine()) == null) ;
         socket.setSoTimeout(10000);
-//        if (line.equals("Done!")) {
-//            return;
-//        }
+        if (line.equals("Done!")) {
+            return;
+        }
     }
 
     private void getSymKey(byte[] encodedKey) throws NoSuchAlgorithmException {
@@ -172,6 +172,7 @@ public class Client {
         in.close();
         out.close();
         reader.close();
+        printer.close();
         socket.close();
     }
 
@@ -229,5 +230,23 @@ public class Client {
             toReturn[i + prefix.length] = suffix[i];
         }
         return toReturn;
+    }
+
+    private void testEncryption(int numTrial, String RSAAES, String path, String fileName) throws Exception {
+        long start = System.currentTimeMillis();
+        String encryption;
+        if (RSAAES.equals("RSA")) encryption = "RSA/ECB/PKCS1Padding";
+        else if (RSAAES.equals("AES")) encryption = "AES/ECB/PKCS5Padding";
+        else return;
+
+        for (int i = 0; i < numTrial; i++) {
+            long startTrial = System.currentTimeMillis();
+            uploadFile(path, fileName + (i + 1), encryption);
+//            System.out.println("Trial " + i + "" + (System.currentTimeMillis() - startTrial));
+            System.out.println(System.currentTimeMillis() - startTrial);
+        }
+        long total = System.currentTimeMillis() - start;
+        long average = total / numTrial;
+        System.out.println("Average time: " + average);
     }
 }

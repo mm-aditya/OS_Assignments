@@ -92,26 +92,27 @@ public class SecStore {
     }
 
     private void waitingForUpload(Socket conn, BufferedReader reader, InputStream in, SecretKey symKey) throws Exception {
+        PrintWriter writer = new PrintWriter(conn.getOutputStream(), true);
         try {
             while (true) {
                 String inLine = reader.readLine();
                 if (inLine.equals("AES")) {
-                    receiveFile(conn, reader, in, "AES/ECB/PKCS5Padding", symKey);
+                    receiveFile(conn, writer, reader, in, "AES/ECB/PKCS5Padding", symKey);
                 } else if (inLine.equals("RSA")) {
-                    receiveFile(conn, reader, in, "RSA/ECB/PKCS1Padding", privateKey);
+                    receiveFile(conn, writer, reader, in, "RSA/ECB/PKCS1Padding", privateKey);
                     // TODO: need a function that waits for files or until socket closes or server shuts down to close all connections.
                 }
             }
         } catch (SocketException se) {
             System.out.println("Socket has closed. Thank you for your patronage.");
-            in.close();
+            writer.close();
             reader.close();
+            in.close();
             conn.close();
-            return;
         }
     }
 
-    private void receiveFile(Socket conn, BufferedReader nameReader, InputStream inputStream, String decryptType, Key key) throws Exception {
+    private void receiveFile(Socket conn, PrintWriter writer, BufferedReader nameReader, InputStream inputStream, String decryptType, Key key) throws Exception {
         String fileName = nameReader.readLine();
         conn.setSoTimeout(10000);
         String message = new String(decryptBytes(readAll(inputStream), decryptType, key));
@@ -119,10 +120,7 @@ public class SecStore {
         fileWriter.write(message);
         fileWriter.close();
         conn.setSoTimeout(0);
-        PrintWriter writer = new PrintWriter(conn.getOutputStream(), true);
         writer.println("Done!");
-        Thread.sleep(5);
-        writer.close();
         System.out.println("Yey");
     }
 
@@ -135,8 +133,7 @@ public class SecStore {
 
     private SecretKey getSecretKey() throws NoSuchAlgorithmException {
         KeyGenerator keyGen = KeyGenerator.getInstance("AES");
-        SecretKey secretKey = keyGen.generateKey();
-        return secretKey;
+        return keyGen.generateKey();
     }
 
     private byte[] encryptBytes(byte[] toBeEncrypted, String encryptType, Key key) throws Exception {

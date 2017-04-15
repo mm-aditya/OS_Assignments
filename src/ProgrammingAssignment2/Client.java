@@ -32,7 +32,7 @@ public class Client {
         Client client = new Client("localhost", 6789);
         try {
             client.handshake();
-            int numTrial = 10;
+            int numTrial = 10; 
             System.out.println("Pure RSA: small");
             long start = System.currentTimeMillis();
             for (int i = 0; i < numTrial; i++) {

@@ -242,7 +242,6 @@ public class Client {
         for (int i = 0; i < numTrial; i++) {
             long startTrial = System.currentTimeMillis();
             uploadFile(path, fileName + (i + 1), encryption);
-//            System.out.println("Trial " + i + "" + (System.currentTimeMillis() - startTrial));
             System.out.println(System.currentTimeMillis() - startTrial);
         }
         long total = System.currentTimeMillis() - start;

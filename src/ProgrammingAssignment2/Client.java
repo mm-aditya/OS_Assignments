@@ -32,7 +32,7 @@ public class Client {
         Client client = new Client("localhost", 6789);
         try {
             client.handshake();
-            int numTrial = 10;
+            int numTrial = 1;
             System.out.println("Pure RSA: small");
             client.testEncryption(numTrial, "RSA", "src\\ProgrammingAssignment2\\sampleData\\smallFile.txt", "smallRSA.txt");
             System.out.println("Pure RSA: medium");

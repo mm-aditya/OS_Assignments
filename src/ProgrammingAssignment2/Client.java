@@ -17,7 +17,7 @@ import java.security.cert.X509Certificate;
 /**
  * Created by HanWei on 11/4/2017.
  */
-public class Client {
+public class Client { 
     int portNumber;
     private Socket socket;
     private OutputStream out;

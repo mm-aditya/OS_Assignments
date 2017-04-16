@@ -18,7 +18,7 @@ import java.util.concurrent.Executors;
 /**
  * Created by HanWei on 11/4/2017.
  */
- 
+
 // when connected, do the handshake protocol
 // Wait for file to be uploaded.
 // Save file.

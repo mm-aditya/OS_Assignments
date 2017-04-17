@@ -114,7 +114,7 @@ public class SecStore {
 
     private void receiveFile(Socket conn, PrintWriter writer, BufferedReader nameReader, InputStream inputStream, String decryptType, Key key) throws Exception {
         String fileName = nameReader.readLine();
-        conn.setSoTimeout(100);   // need this becuase of the readAll method
+        conn.setSoTimeout(1000);   // need this becuase of the readAll method
         byte[] toEncrypt = readAll(inputStream);
         System.out.println(Arrays.toString(toEncrypt));
         String message = new String(decryptBytes(toEncrypt, decryptType, key));
@@ -163,6 +163,7 @@ public class SecStore {
                 break;
             }
         }
+        System.out.println(buffer.size());
         return buffer.toByteArray();
     }
 

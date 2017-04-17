@@ -139,11 +139,14 @@ public class Client {
         File upload = new File(pathToFile);
         BufferedReader reader = new BufferedReader(new FileReader(upload));
         String message;
-        String toEncrypt = "";
+        StringBuffer buffer = new StringBuffer();
         while ((message = reader.readLine()) != null) {
-            toEncrypt += message + "\n";
+            buffer.append(message);
+            buffer.append("\n");
         }
+        String toEncrypt = buffer.toString();
         byte[] toSend = encryptBytes(toEncrypt.getBytes(), encryptionType, key);
+        System.out.println("Size: " + toSend.length);
         printer.println(encryptionType.substring(0, 3));
         out.write((name + "\n").getBytes());
         out.write(toSend);

@@ -33,8 +33,8 @@ public class Client {
         try {
             client.handshake();
             int numTrial = 1;
-//            System.out.println("Pure RSA: small");
-//            client.testEncryption(numTrial, "RSA", "src\\ProgrammingAssignment2\\sampleData\\smallFile.txt", "smallRSA.txt");
+            System.out.println("Pure RSA: small");
+            client.testEncryption(numTrial, "RSA", "src\\ProgrammingAssignment2\\sampleData\\smallFile.txt", "smallRSA.txt");
             System.out.println("Pure RSA: medium");
             client.testEncryption(numTrial, "RSA", "src\\ProgrammingAssignment2\\sampleData\\medianFile.txt", "mediumRSA.txt");
             System.out.println("Pure RSA: large");

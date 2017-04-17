@@ -101,7 +101,6 @@ public class SecStore {
                     receiveFile(conn, writer, reader, in, "AES/ECB/PKCS5Padding", symKey);
                 } else if (inLine.equals("RSA")) {
                     receiveFile(conn, writer, reader, in, "RSA/ECB/PKCS1Padding", privateKey);
-                    // TODO: need a function that waits for files or until socket closes or server shuts down to close all connections.
                 }
             }
         } catch (SocketException se) {
@@ -155,14 +154,12 @@ public class SecStore {
     private byte[] readAll(InputStream in) throws Exception {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         int nRead;
-        byte[] data = new byte[16384];
+        byte[] data = new byte[16777216];
         while (true) {
             try {
                 nRead = in.read(data, 0, data.length);
                 buffer.write(data, 0, nRead);
-//                System.out.println(Arrays.toString(data));
             } catch (SocketTimeoutException sTimeout) {
-                System.out.println("Getting out");
                 break;
             }
         }

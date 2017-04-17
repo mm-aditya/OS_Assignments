@@ -33,16 +33,16 @@ public class Client {
         try {
             client.handshake();
             int numTrial = 1;
-            System.out.println("Pure RSA: small");
-            client.testEncryption(numTrial, "RSA", "src\\ProgrammingAssignment2\\sampleData\\smallFile.txt", "smallRSA.txt");
-            System.out.println("Pure RSA: medium");
-            client.testEncryption(numTrial, "RSA", "src\\ProgrammingAssignment2\\sampleData\\medianFile.txt", "mediumRSA.txt");
-            System.out.println("Pure RSA: large");
-            client.testEncryption(numTrial, "RSA", "src\\ProgrammingAssignment2\\sampleData\\largeFile.txt", "largeRSA.txt");
-            System.out.println("RSA + AES: small");
-            client.testEncryption(numTrial, "RSA", "src\\ProgrammingAssignment2\\sampleData\\smallFile.txt", "smallAES.txt");
-            System.out.println("RSA + AES: medium");
-            client.testEncryption(numTrial, "RSA", "src\\ProgrammingAssignment2\\sampleData\\medianFile.txt", "mediumAES.txt");
+//            System.out.println("Pure RSA: small");
+//            client.testEncryption(numTrial, "RSA", "src\\ProgrammingAssignment2\\sampleData\\smallFile.txt", "smallRSA.txt");
+//            System.out.println("Pure RSA: medium");
+//            client.testEncryption(numTrial, "RSA", "src\\ProgrammingAssignment2\\sampleData\\medianFile.txt", "mediumRSA.txt");
+//            System.out.println("Pure RSA: large");
+//            client.testEncryption(numTrial, "RSA", "src\\ProgrammingAssignment2\\sampleData\\largeFile.txt", "largeRSA.txt");
+//            System.out.println("RSA + AES: small");
+//            client.testEncryption(numTrial, "RSA", "src\\ProgrammingAssignment2\\sampleData\\smallFile.txt", "smallAES.txt");
+//            System.out.println("RSA + AES: medium");
+//            client.testEncryption(numTrial, "RSA", "src\\ProgrammingAssignment2\\sampleData\\medianFile.txt", "mediumAES.txt");
             System.out.println("RSA + AES: large");
             client.testEncryption(numTrial, "RSA", "src\\ProgrammingAssignment2\\sampleData\\largeFile.txt", "largeAES.txt");
 //            client.uploadFile("src\\ProgrammingAssignment2\\sampleData\\smallFile.txt", "meow.txt", "AES/ECB/PKCS5Padding");

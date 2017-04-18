@@ -39,6 +39,7 @@ public class Client {
 //            client.testEncryption(numTrial, "RSA", "src\\ProgrammingAssignment2\\sampleData\\medianFile.txt", "mediumRSA.txt");
 //            System.out.println("Pure RSA: large");
 //            client.testEncryption(numTrial, "RSA", "src\\ProgrammingAssignment2\\sampleData\\largeFile.txt", "largeRSA.txt");
+            client.testEncryption(numTrial, "AES", "src\\ProgrammingAssignment2\\sampleData\\sunset.jpg", "SunriseSet.jpg");
             System.out.println("RSA + AES: small");
             client.testEncryption(numTrial, "AES", "src\\ProgrammingAssignment2\\sampleData\\smallFile.txt", "smallAES.txt");
             System.out.println("RSA + AES: medium");
@@ -69,7 +70,7 @@ public class Client {
     }
 
     private void handshake() throws Exception {
-        String cNonce = generateCnonce() + "\n";
+        String cNonce = generateCnonce();
         System.out.println(Arrays.toString(cNonce.getBytes()));
         out.write(cNonce.getBytes());
         byte[] encryptedCnonce = waitForResponse(in);

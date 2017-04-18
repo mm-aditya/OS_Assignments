@@ -122,9 +122,8 @@ public class SecStore {
         String fileName = new String(waitForResponse(conn, in));
         out.write("K".getBytes());
         byte[] toEncrypt = waitForResponse(conn, in);
-        String message = new String(decryptBytes(toEncrypt, decryptType, key));
-        FileWriter fileWriter = new FileWriter("PA2Saved\\" + fileName);
-        fileWriter.write(message);
+        FileOutputStream fileWriter = new FileOutputStream("PA2Saved\\" + fileName);
+        fileWriter.write(decryptBytes(toEncrypt, decryptType, key));
         fileWriter.close();
         System.out.println("Yey");
         out.write("Done!".getBytes());

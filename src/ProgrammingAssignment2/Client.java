@@ -8,22 +8,22 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.net.SocketTimeoutException;
+import java.nio.file.Files;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.Arrays;
 
 /**
  * Created by HanWei on 11/4/2017.
  */
-public class Client { 
+public class Client {
     int portNumber;
     private Socket socket;
     private OutputStream out;
-    private PrintWriter printer;
     private InputStream in;
-    private BufferedReader reader;
     private X509Certificate serverCert;
     private X509Certificate CACert;
     private SecretKey symKey;
@@ -39,13 +39,12 @@ public class Client {
 //            client.testEncryption(numTrial, "RSA", "src\\ProgrammingAssignment2\\sampleData\\medianFile.txt", "mediumRSA.txt");
 //            System.out.println("Pure RSA: large");
 //            client.testEncryption(numTrial, "RSA", "src\\ProgrammingAssignment2\\sampleData\\largeFile.txt", "largeRSA.txt");
-//            System.out.println("RSA + AES: small");
-//            client.testEncryption(numTrial, "RSA", "src\\ProgrammingAssignment2\\sampleData\\smallFile.txt", "smallAES.txt");
-//            System.out.println("RSA + AES: medium");
-//            client.testEncryption(numTrial, "RSA", "src\\ProgrammingAssignment2\\sampleData\\medianFile.txt", "mediumAES.txt");
+            System.out.println("RSA + AES: small");
+            client.testEncryption(numTrial, "AES", "src\\ProgrammingAssignment2\\sampleData\\smallFile.txt", "smallAES.txt");
+            System.out.println("RSA + AES: medium");
+            client.testEncryption(numTrial, "AES", "src\\ProgrammingAssignment2\\sampleData\\medianFile.txt", "mediumAES.txt");
             System.out.println("RSA + AES: large");
-            client.testEncryption(numTrial, "RSA", "src\\ProgrammingAssignment2\\sampleData\\largeFile.txt", "largeAES.txt");
-//            client.uploadFile("src\\ProgrammingAssignment2\\sampleData\\smallFile.txt", "meow.txt", "AES/ECB/PKCS5Padding");
+            client.testEncryption(numTrial, "AES", "src\\ProgrammingAssignment2\\sampleData\\largeFile.txt", "largeAES.txt");
             System.out.println("Ok all done.");
         } catch (Exception e) {
             System.out.println(e.getMessage());
@@ -59,7 +58,7 @@ public class Client {
         SocketAddress sockaddr = new InetSocketAddress(ipAddress, portNumber);    // set this to IP address of server
         try {
             socket.connect(sockaddr);
-            socket.setSoTimeout(10000);
+            socket.setSoTimeout(100);
             out = socket.getOutputStream();
             in = socket.getInputStream();
             CertificateFactory cf = CertificateFactory.getInstance("X.509");
@@ -67,22 +66,24 @@ public class Client {
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
-        printer = new PrintWriter(out, true);
-        reader = new BufferedReader(new InputStreamReader(in));
     }
 
     private void handshake() throws Exception {
-        String cNonce = generateCnonce();
-        printer.println(cNonce);
-        byte[] encryptedCnonce = readAll(in);
-        printer.println("Cert pls");
+        String cNonce = generateCnonce() + "\n";
+        System.out.println(Arrays.toString(cNonce.getBytes()));
+        out.write(cNonce.getBytes());
+        byte[] encryptedCnonce = waitForResponse(in);
+        System.out.println(Arrays.toString(encryptedCnonce));
+        out.write("Cert pls".getBytes());
         System.out.println("Asking for cert");
-        byte[] byteCert = readAll(in);
+        byte[] byteCert = waitForResponse(in);
         serverCert = getCert(byteCert);
         if (verifyServer(cNonce, encryptedCnonce, serverCert.getPublicKey())) {
-            printer.println("OK CAN");
-            byte[] byteSecretKey = decryptBytes(readAll(in), "RSA/ECB/PKCS1Padding", serverCert.getPublicKey());
+            out.write("OK CAN".getBytes());
+            byte[] byteSecretKey = decryptBytes(waitForResponse(in), "RSA/ECB/PKCS1Padding", serverCert.getPublicKey());
             getSymKey(byteSecretKey);
+        } else {
+            System.out.println("Oh shiet");
         }
     }
 
@@ -123,6 +124,7 @@ public class Client {
     private byte[] encryptBytes(byte[] toBeEncrypted, String encryptType, Key key) throws Exception {
         Cipher cipher = Cipher.getInstance(encryptType);
         cipher.init(Cipher.ENCRYPT_MODE, key);
+        if (encryptType.contains("AES")) return cipher.doFinal(toBeEncrypted);
         return blockCipher(toBeEncrypted, Cipher.ENCRYPT_MODE, cipher);
     }
 
@@ -137,31 +139,29 @@ public class Client {
         if (encryptionType.contains("RSA")) key = serverCert.getPublicKey();
         else key = symKey;
         File upload = new File(pathToFile);
-        BufferedReader reader = new BufferedReader(new FileReader(upload));
-        String message;
-        StringBuffer buffer = new StringBuffer();
-        while ((message = reader.readLine()) != null) {
-            buffer.append(message);
-            buffer.append("\n");
-        }
-        String toEncrypt = buffer.toString();
-        byte[] toSend = encryptBytes(toEncrypt.getBytes(), encryptionType, key);
+        byte[] toSend = encryptBytes(Files.readAllBytes(upload.toPath()), encryptionType, key);
         System.out.println("Size: " + toSend.length);
-        printer.println(encryptionType.substring(0, 3));
-        out.write((name + "\n").getBytes());
+        out.write(encryptionType.substring(0, 3).getBytes());
+        waitForResponse(in);
+        out.write((name).getBytes());
+        waitForResponse(in);
         out.write(toSend);
         out.flush();
         waitForServer();
     }
 
-    private void waitForServer() throws Exception {
-        socket.setSoTimeout(0);
-        String line;
-        while ((line = reader.readLine()) == null) ;
-        socket.setSoTimeout(10000);
-        if (line.equals("Done!")) {
-            return;
+    private byte[] waitForResponse(InputStream in) throws Exception {
+        byte[] data = new byte[0];
+        while (data.length == 0) {
+            data = readAll(in);
         }
+        return data;
+    }
+
+    private void waitForServer() throws Exception {
+        String line = new String(waitForResponse(in));
+        if (line.equals("Done!")) System.out.println("Received done");
+        else System.out.println("Cannot receive Done");
     }
 
     private void getSymKey(byte[] encodedKey) throws NoSuchAlgorithmException {
@@ -175,8 +175,6 @@ public class Client {
     public void closeConnection() throws Exception {
         in.close();
         out.close();
-        reader.close();
-        printer.close();
         socket.close();
     }
 

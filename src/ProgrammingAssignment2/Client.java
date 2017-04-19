@@ -14,7 +14,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import java.util.Arrays;
 
 /**
  * Created by HanWei on 11/4/2017.
@@ -32,20 +31,18 @@ public class Client {
         Client client = new Client("localhost", 6789);
         try {
             client.handshake();
-            int numTrial = 1;
-//            System.out.println("Pure RSA: small");
-//            client.testEncryption(numTrial, "RSA", "src\\ProgrammingAssignment2\\sampleData\\smallFile.txt", "smallRSA.txt");
-//            System.out.println("Pure RSA: medium");
-//            client.testEncryption(numTrial, "RSA", "src\\ProgrammingAssignment2\\sampleData\\medianFile.txt", "mediumRSA.txt");
-//            System.out.println("Pure RSA: large");
-//            client.testEncryption(numTrial, "RSA", "src\\ProgrammingAssignment2\\sampleData\\largeFile.txt", "largeRSA.txt");
-            client.testEncryption(numTrial, "AES", "src\\ProgrammingAssignment2\\sampleData\\sunset.jpg", "SunriseSet.jpg");
-            System.out.println("RSA + AES: small");
-            client.testEncryption(numTrial, "AES", "src\\ProgrammingAssignment2\\sampleData\\smallFile.txt", "smallAES.txt");
-            System.out.println("RSA + AES: medium");
-            client.testEncryption(numTrial, "AES", "src\\ProgrammingAssignment2\\sampleData\\medianFile.txt", "mediumAES.txt");
-            System.out.println("RSA + AES: large");
-            client.testEncryption(numTrial, "AES", "src\\ProgrammingAssignment2\\sampleData\\largeFile.txt", "largeAES.txt");
+            int numTrial = 10;
+            File root = new File("src\\ProgrammingAssignment2\\sampleData");
+            String name;
+            for (File child :
+                    root.listFiles()) {
+                name = child.getName();
+                System.out.println("RSA: " + name);
+                client.testEncryption(numTrial, "RSA", child.getPath(), name);
+                System.out.println("AES" + name);
+                client.testEncryption(numTrial, "AES", child.getPath(), name);
+            }
+
             System.out.println("Ok all done.");
         } catch (Exception e) {
             System.out.println(e.getMessage());
@@ -71,10 +68,8 @@ public class Client {
 
     private void handshake() throws Exception {
         String cNonce = generateCnonce();
-        System.out.println(Arrays.toString(cNonce.getBytes()));
         out.write(cNonce.getBytes());
         byte[] encryptedCnonce = waitForResponse(in);
-        System.out.println(Arrays.toString(encryptedCnonce));
         out.write("Cert pls".getBytes());
         System.out.println("Asking for cert");
         byte[] byteCert = waitForResponse(in);
@@ -236,19 +231,28 @@ public class Client {
     }
 
     private void testEncryption(int numTrial, String RSAAES, String path, String fileName) throws Exception {
-        long start = System.currentTimeMillis();
         String encryption;
+        String[] name = fileName.split("\\.");
         if (RSAAES.equals("RSA")) encryption = "RSA/ECB/PKCS1Padding";
         else if (RSAAES.equals("AES")) encryption = "AES/ECB/PKCS5Padding";
         else return;
-
+        FileWriter writer = new FileWriter("PA2Saved\\Timings.csv", true);
+        writer.append(fileName + ",");
+        long total = 0;
+        long trialTiming;
+        long startTrial;
         for (int i = 0; i < numTrial; i++) {
-            long startTrial = System.currentTimeMillis();
-            uploadFile(path, fileName + (i + 1), encryption);
-            System.out.println(System.currentTimeMillis() - startTrial);
+            startTrial = System.currentTimeMillis();
+            uploadFile(path, name[0] + (i + 1) + "." + name[1], encryption);
+            trialTiming = System.currentTimeMillis() - startTrial;
+            System.out.println(trialTiming);
+            writer.append("" + trialTiming + ",");
+            total += trialTiming;
         }
-        long total = System.currentTimeMillis() - start;
         long average = total / numTrial;
+        writer.write("" + average + "\n");
+        writer.flush();
+        writer.close();
         System.out.println("Average time: " + average);
     }
 }

@@ -32,16 +32,17 @@ public class Client {
         try {
             client.handshake();
             int numTrial = 10;
-            File root = new File("src\\ProgrammingAssignment2\\sampleData");
-            String name;
-            for (File child :
-                    root.listFiles()) {
-                name = child.getName();
-                System.out.println("RSA: " + name);
-                client.testEncryption(numTrial, "RSA", child.getPath(), name);
-                System.out.println("AES" + name);
-                client.testEncryption(numTrial, "AES", child.getPath(), name);
-            }
+//            File root = new File("src\\ProgrammingAssignment2\\sampleData");
+//            String name;
+//            for (File child :
+//                    root.listFiles()) {
+//                name = child.getName();
+//                System.out.println("RSA: " + name);
+//                client.testEncryption(numTrial, "RSA", child.getPath(), name);
+//                System.out.println("AES" + name);
+//                client.testEncryption(numTrial, "AES", child.getPath(), name);
+//            }
+            client.testEncryption(1, "RSA", "src\\ProgrammingAssignment2\\sampleData\\largeFile.txt", "largeFile.txt");
 
             System.out.println("Ok all done.");
         } catch (Exception e) {
@@ -121,13 +122,13 @@ public class Client {
         Cipher cipher = Cipher.getInstance(encryptType);
         cipher.init(Cipher.ENCRYPT_MODE, key);
         if (encryptType.contains("AES")) return cipher.doFinal(toBeEncrypted);
-        return blockCipher(toBeEncrypted, Cipher.ENCRYPT_MODE, cipher);
+        return SecStore.blockCipher(toBeEncrypted, Cipher.ENCRYPT_MODE, cipher);
     }
 
     private byte[] decryptBytes(byte[] toBeDecrypted, String decryptType, Key key) throws Exception {
         Cipher cipher = Cipher.getInstance(decryptType);
         cipher.init(Cipher.DECRYPT_MODE, key);
-        return blockCipher(toBeDecrypted, Cipher.DECRYPT_MODE, cipher);
+        return SecStore.blockCipher(toBeDecrypted, Cipher.DECRYPT_MODE, cipher);
     }
 
     private void uploadFile(String pathToFile, String name, String encryptionType) throws Exception {
@@ -172,62 +173,6 @@ public class Client {
         in.close();
         out.close();
         socket.close();
-    }
-
-    private byte[] blockCipher(byte[] bytes, int mode, Cipher cipher) throws IllegalBlockSizeException, BadPaddingException {
-        // string initialize 2 buffers.
-        // scrambled will hold intermediate results
-        byte[] scrambled = new byte[0];
-
-        // toReturn will hold the total result
-        byte[] toReturn = new byte[0];
-        // if we encrypt we use 117 byte long blocks. Decryption requires 128 byte long blocks (because of RSA)
-        int length = (mode == Cipher.ENCRYPT_MODE) ? 117 : 128;
-
-        // another buffer. this one will hold the bytes that have to be modified in this step
-        byte[] buffer = new byte[length];
-
-        for (int i = 0; i < bytes.length; i++) {
-
-            // if we filled our buffer array we have our block ready for de- or encryption
-            if ((i > 0) && (i % length == 0)) {
-                //execute the operation
-                scrambled = cipher.doFinal(buffer);
-                // add the result to our total result.
-                toReturn = append(toReturn, scrambled);
-                // here we calculate the length of the next buffer required
-                int newlength = length;
-
-                // if newlength would be longer than remaining bytes in the bytes array we shorten it.
-                if (i + length > bytes.length) {
-                    newlength = bytes.length - i;
-                }
-                // clean the buffer array
-                buffer = new byte[newlength];
-            }
-            // copy byte into our buffer.
-            buffer[i % length] = bytes[i];
-        }
-
-        // this step is needed if we had a trailing buffer. should only happen when encrypting.
-        // example: we encrypt 110 bytes. 100 bytes per run means we "forgot" the last 10 bytes. they are in the buffer array
-        scrambled = cipher.doFinal(buffer);
-
-        // final step before we can return the modified data.
-        toReturn = append(toReturn, scrambled);
-
-        return toReturn;
-    }
-
-    private byte[] append(byte[] prefix, byte[] suffix) {
-        byte[] toReturn = new byte[prefix.length + suffix.length];
-        for (int i = 0; i < prefix.length; i++) {
-            toReturn[i] = prefix[i];
-        }
-        for (int i = 0; i < suffix.length; i++) {
-            toReturn[i + prefix.length] = suffix[i];
-        }
-        return toReturn;
     }
 
     private void testEncryption(int numTrial, String RSAAES, String path, String fileName) throws Exception {

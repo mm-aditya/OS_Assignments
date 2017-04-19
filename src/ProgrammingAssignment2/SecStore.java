@@ -78,7 +78,7 @@ public class SecStore {
         byte[] inLine = waitForResponse(socketConnection, in);
         out.write(encryptBytes(inLine, "RSA/ECB/PKCS1Padding", privateKey));
         inLine = waitForResponse(socketConnection, in);
-        if (Arrays.equals(inLine,"Cert pls".getBytes())) {
+        if (Arrays.equals(inLine, "Cert pls".getBytes())) {
             out.write(serverCert.getEncoded());
             out.flush();
         }
@@ -171,59 +171,32 @@ public class SecStore {
         return buffer.toByteArray();
     }
 
-    private byte[] blockCipher(byte[] bytes, int mode, Cipher cipher) throws IllegalBlockSizeException, BadPaddingException {
+    protected static byte[] blockCipher(byte[] bytes, int mode, Cipher cipher) throws IllegalBlockSizeException, BadPaddingException, IOException {
         // string initialize 2 buffers.
         // scrambled will hold intermediate results
-        byte[] scrambled = new byte[0];
 
         // toReturn will hold the total result
-        byte[] toReturn = new byte[0];
+        ByteArrayOutputStream toReturn = new ByteArrayOutputStream();
         // if we encrypt we use 117 byte long blocks. Decryption requires 128 byte long blocks (because of RSA)
         int length = (mode == Cipher.ENCRYPT_MODE) ? 117 : 128;
+        int count = 0;
 
         // another buffer. this one will hold the bytes that have to be modified in this step
         byte[] buffer = new byte[length];
 
-        for (int i = 0; i < bytes.length; i++) {
-
-            // if we filled our buffer array we have our block ready for de- or encryption
-            if ((i > 0) && (i % length == 0)) {
-                //execute the operation
-                scrambled = cipher.doFinal(buffer);
-                // add the result to our total result.
-                toReturn = append(toReturn, scrambled);
-                // here we calculate the length of the next buffer required
-                int newlength = length;
-
-                // if newlength would be longer than remaining bytes in the bytes array we shorten it.
-                if (i + length > bytes.length) {
-                    newlength = bytes.length - i;
-                }
+        System.out.println("Start encrypt/decrypt");
+        while (count < bytes.length) {
+            if (count + length > bytes.length) {
+                length = bytes.length - count;
                 // clean the buffer array
-                buffer = new byte[newlength];
+                buffer = new byte[length];
             }
-            // copy byte into our buffer.
-            buffer[i % length] = bytes[i];
+            System.arraycopy(bytes, count, buffer, 0, length);
+            toReturn.write(cipher.doFinal(buffer));
+            count += length;
         }
+        System.out.println("Stop encrypt/decrypt");
 
-        // this step is needed if we had a trailing buffer. should only happen when encrypting.
-        // example: we encrypt 110 bytes. 100 bytes per run means we "forgot" the last 10 bytes. they are in the buffer array
-        scrambled = cipher.doFinal(buffer);
-
-        // final step before we can return the modified data.
-        toReturn = append(toReturn, scrambled);
-
-        return toReturn;
-    }
-
-    private byte[] append(byte[] prefix, byte[] suffix) {
-        byte[] toReturn = new byte[prefix.length + suffix.length];
-        for (int i = 0; i < prefix.length; i++) {
-            toReturn[i] = prefix[i];
-        }
-        for (int i = 0; i < suffix.length; i++) {
-            toReturn[i + prefix.length] = suffix[i];
-        }
-        return toReturn;
+        return toReturn.toByteArray();
     }
 }

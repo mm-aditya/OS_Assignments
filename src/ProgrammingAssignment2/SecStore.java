@@ -184,7 +184,6 @@ public class SecStore {
         // another buffer. this one will hold the bytes that have to be modified in this step
         byte[] buffer = new byte[length];
 
-        System.out.println("Start encrypt/decrypt");
         while (count < bytes.length) {
             if (count + length > bytes.length) {
                 length = bytes.length - count;
@@ -195,7 +194,6 @@ public class SecStore {
             toReturn.write(cipher.doFinal(buffer));
             count += length;
         }
-        System.out.println("Stop encrypt/decrypt");
 
         return toReturn.toByteArray();
     }

@@ -32,19 +32,20 @@ public class Client {
         try {
             client.handshake();
             int numTrial = 10;
-//            File root = new File("src\\ProgrammingAssignment2\\sampleData");
-//            String name;
-//            for (File child :
-//                    root.listFiles()) {
-//                name = child.getName();
-//                System.out.println("RSA: " + name);
-//                client.testEncryption(numTrial, "RSA", child.getPath(), name);
-//                System.out.println("AES" + name);
-//                client.testEncryption(numTrial, "AES", child.getPath(), name);
-//            }
-            client.testEncryption(1, "RSA", "src\\ProgrammingAssignment2\\sampleData\\largeFile.txt", "largeFile.txt");
+            File root = new File("src\\ProgrammingAssignment2\\sampleData");
+            String name;
+            for (File child :
+                    root.listFiles()) {
+                name = child.getName();
+                System.out.println("RSA: " + name);
+                client.testEncryption(numTrial, "RSA", child.getPath(), name);
+                System.out.println("AES" + name);
+                client.testEncryption(numTrial, "AES", child.getPath(), name);
+            }
+//            client.testEncryption(1, "RSA", "src\\ProgrammingAssignment2\\sampleData\\largeFile.txt", "largeFile.txt");
 
             System.out.println("Ok all done.");
+            client.closeConnection();
         } catch (Exception e) {
             System.out.println(e.getMessage());
             e.printStackTrace();

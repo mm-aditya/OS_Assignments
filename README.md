@@ -47,3 +47,4 @@ To implement a secure file upload application from a client to an Internet file 
 >
 > For CP2, once the SecStore is verified, Client will request for a symmetric key. SecStore will send it over and Client will encrypt
 > the file with the symmetric key using AES before sending it to SecStore.
+> Connection between client and server stays open for multiple uploads.
